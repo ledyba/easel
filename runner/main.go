@@ -1,0 +1,34 @@
+package main
+
+import (
+	"runtime"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/ledyba/easel"
+)
+
+func init() {
+	// This is needed to arrange that main() runs on main thread.
+	// See documentation for functions that are only allowed to be called from the main thread.
+	runtime.LockOSThread()
+}
+
+func main() {
+	err := glfw.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer glfw.Terminate()
+	log.Debug("Initialized.")
+
+	log.Info("******************************")
+	log.Info("     ___  ___  ___  ___ (     ")
+	log.Info("    |___)|   )|___ |___)|     ")
+	log.Info("    |__  |__/| __/ |__  |     ")
+	log.Info("******************************")
+
+	e := easel.NewEasel()
+	defer e.Destroy()
+
+}
