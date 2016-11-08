@@ -15,18 +15,15 @@ func init() {
 }
 
 func main() {
-	err := glfw.Init()
+	var err error
+	err = glfw.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer glfw.Terminate()
 	log.Debug("Initialized.")
 
-	log.Info("******************************")
-	log.Info("     ___  ___  ___  ___ (     ")
-	log.Info("    |___)|   )|___ |___)|     ")
-	log.Info("    |__  |__/| __/ |__  |     ")
-	log.Info("******************************")
+	printStartupBanner()
 
 	e := easel.NewEasel()
 	defer e.Destroy()

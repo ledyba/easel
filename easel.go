@@ -2,6 +2,7 @@ package easel
 
 import (
 	log "github.com/Sirupsen/logrus"
+	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -32,4 +33,18 @@ func NewEasel() *Easel {
 // Destroy ...
 func (e *Easel) Destroy() {
 	e.window.Destroy()
+}
+
+// CompileProgram ...
+func (e *Easel) CompileProgram(vertex, fragment string) (*Program, error) {
+	progID, err := compileProgram(vertex, fragment)
+	if err != nil {
+		return nil, err
+	}
+	return newProgram(e, progID), nil
+}
+
+// Destroy ...
+func (p *Program) Destroy() {
+	gl.DeleteProgram(p.progID)
 }
