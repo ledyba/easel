@@ -13,5 +13,5 @@ inst:
 
 easel: $(shell find . -type f -name '*.go')
 	go build -o easel \
-					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
+					-ldflags "-v -X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
 					"github.com/ledyba/easel/runner"
