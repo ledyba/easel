@@ -1,10 +1,13 @@
-.PHONY: run-test inst
+.PHONY: test run-test inst
 
 GIT_REV=$(shell git log -1 | base64)
 NOW=$(shell date -u "+%Y/%m/%d %H:%M:%S")
 
 run-test: easel
 	./easel
+
+test:
+	go test .
 
 inst:
 	go get -u "github.com/go-gl/gl/v4.1-core/gl"

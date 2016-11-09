@@ -23,28 +23,18 @@ func printStartupBanner() {
 	log.Info("  <<GLFW>>")
 	log.Infof("    Version: %s", glfw.GetVersionString())
 	mons := glfw.GetMonitors()
-	cmon := glfw.GetPrimaryMonitor()
 	log.Infof("    Monitors: %d", len(mons))
 	for i, mon := range mons {
 		w, h := mon.GetPhysicalSize()
 		x, y := mon.GetPos()
-		cvm := mon.GetVideoMode()
 		vms := mon.GetVideoModes()
-		used := ""
-		if cmon == mon {
-			used = "** Primary **"
-		}
 		log.Infof("    --------------------------------")
-		log.Infof("    [Monitor %d]%s", i, used)
+		log.Infof("    [Monitor %d]", i)
 		log.Infof("      Name: %s", mon.GetName())
 		log.Infof("      PhysicalSize:  %dx%d", w, h)
 		log.Infof("      Pos:          (%d,%d)", x, y)
 		for j, vm := range vms {
-			used := ""
-			if vm == cvm {
-				used = "** Current **"
-			}
-			log.Infof("      [VideoMode %d]%s", j, used)
+			log.Infof("      [VideoMode %d]", j)
 			log.Infof("        Red/Green/Blue: %d/%d/%d", vm.RedBits, vm.GreenBits, vm.BlueBits)
 			log.Infof("        Resolution: %dx%d(%d Hz)", vm.Width, vm.Height, vm.RefreshRate)
 		}

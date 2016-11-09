@@ -3,6 +3,10 @@ package main
 import (
 	"runtime"
 
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/ledyba/easel"

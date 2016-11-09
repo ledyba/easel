@@ -24,6 +24,24 @@ func NewEasel() *Easel {
 		log.Fatal(err)
 	}
 	w.MakeContextCurrent()
+	err = gl.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Infof("Easel Created.")
+	log.Infof("  ** OpenGL Info **")
+	log.Infof("    OpenGL Version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
+	log.Infof("    GLSL Version:   %s", gl.GoStr(gl.GetString(gl.SHADING_LANGUAGE_VERSION)))
+	log.Infof("    OpenGL Vendor:  %s", gl.GoStr(gl.GetString(gl.VENDOR)))
+	log.Infof("    Renderer:       %s", gl.GoStr(gl.GetString(gl.RENDERER)))
+	log.Infof("    ** Extensions **")
+	for i := uint32(0); i < gl.NUM_EXTENSIONS; i++ {
+		str := gl.GetStringi(gl.EXTENSIONS, i)
+		if str != nil {
+			log.Infof("      - %s", gl.GoStr(str))
+		}
+	}
+
 	log.Debug("Easel Created.")
 	return &Easel{
 		window: w,
@@ -42,6 +60,11 @@ func (e *Easel) CompileProgram(vertex, fragment string) (*Program, error) {
 		return nil, err
 	}
 	return newProgram(e, progID), nil
+}
+
+// CreateTexture2D ...
+func (e *Easel) CreateTexture2D(data []byte) (*Texture2D, error) {
+	return newTexture2D(data)
 }
 
 // Destroy ...
