@@ -20,7 +20,23 @@ func newProgram(e *Easel, progID uint32) *Program {
 	}
 }
 
+func (p *Program) use() error {
+	gl.UseProgram(p.progID)
+	return checkGLError("Error while binding program")
+}
+
+func (p *Program) unuse() {
+	gl.UseProgram(0)
+}
+
+func (p *Program) delete() error {
+	gl.DeleteProgram(p.progID)
+	p.progID = 0
+	return checkGLError("Error while deleting program")
+}
+
 // -----------------------------------------------------------------------------
+
 func compileProgram(vertex, fragment string) (uint32, error) {
 	var err error
 	vsh, err := compileShader(vertex, gl.VERTEX_SHADER)

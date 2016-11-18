@@ -25,6 +25,17 @@ func newTexture2D(data []byte) (*Texture2D, error) {
 	}, nil
 }
 
+// Bind ...
+func (tex *Texture2D) Bind() error {
+	gl.BindTexture(gl.TEXTURE_2D, tex.texID)
+	return checkGLError("Erro while binding texture")
+}
+
+// Unbind ...
+func (tex *Texture2D) Unbind() {
+	gl.BindTexture(gl.TEXTURE_2D, 0)
+}
+
 func loadTexture(reader io.Reader) (uint32, error) {
 	img, _, err := image.Decode(reader)
 	if err != nil {
