@@ -15,24 +15,28 @@ func newVertexArrayBuffer() *VertexBuffer {
 	return vb
 }
 
-func newVertexElementArrayBuffer() *VertexBuffer {
+func newVertexIndexArrayBuffer() *VertexBuffer {
 	vb := &VertexBuffer{}
 	gl.GenBuffers(1, &vb.id)
 	vb.target = gl.ELEMENT_ARRAY_BUFFER
 	return vb
 }
 
-// Bind ...
-func (vb *VertexBuffer) Bind() {
+func (vb *VertexBuffer) bind() error {
 	gl.BindBuffer(vb.target, vb.id)
+	return checkGLError("Error while binding vertex buffer")
 }
 
-// Unbind ...
-func (vb *VertexBuffer) Unbind() {
+func (vb *VertexBuffer) unbind() {
 	gl.BindBuffer(vb.target, 0)
 }
 
-// LoadData ...
-func (vb *VertexBuffer) LoadData(data []float32) {
-	gl.BufferData(gl.ARRAY_BUFFER, len(data)*4, gl.Ptr(data), gl.STATIC_DRAW)
+func (vb *VertexBuffer) loadDataf(data []float32) error {
+	gl.BufferData(vb.target, len(data)*4, gl.Ptr(data), gl.STATIC_DRAW)
+	return checkGLError("Error while loading data(int)")
+}
+
+func (vb *VertexBuffer) loadDatai(data []uint32) error {
+	gl.BufferData(vb.target, len(data)*4, gl.Ptr(data), gl.STATIC_DRAW)
+	return checkGLError("Error while loading data(float)")
 }

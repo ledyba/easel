@@ -9,13 +9,11 @@ import (
 
 // Program ...
 type Program struct {
-	easel  *Easel
 	progID uint32
 }
 
-func newProgram(e *Easel, progID uint32) *Program {
+func newProgram(progID uint32) *Program {
 	return &Program{
-		easel:  e,
 		progID: progID,
 	}
 }
@@ -33,6 +31,12 @@ func (p *Program) delete() error {
 	gl.DeleteProgram(p.progID)
 	p.progID = 0
 	return checkGLError("Error while deleting program")
+}
+
+func (p *Program) attibLocation(name string) (uint32, error) {
+	idx := uint32(gl.GetAttribLocation(p.progID, gl.Str(name+"\x00")))
+	err := checkGLError("error while get attrib location")
+	return idx, err
 }
 
 // -----------------------------------------------------------------------------

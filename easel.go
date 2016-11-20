@@ -1,73 +1,79 @@
 package easel
 
-import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/go-gl/gl/v4.1-core/gl"
-	"github.com/go-gl/glfw/v3.2/glfw"
-)
+import "github.com/go-gl/gl/v4.1-core/gl"
 
 // Easel ...
 type Easel struct {
-	window *glfw.Window
+	program     *Program
+	vertexArray *VertexArray
+	textureName string
 }
 
-// NewEasel ...
-func NewEasel() *Easel {
-	glfw.WindowHint(glfw.Visible, glfw.False)
-	glfw.WindowHint(glfw.ContextVersionMajor, 4)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
-
-	w, err := glfw.CreateWindow(640, 480, "Easel", nil, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	w.MakeContextCurrent()
-	err = gl.Init()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Infof("Easel Created.")
-	log.Infof("  ** OpenGL Info **")
-	log.Infof("    OpenGL Version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
-	log.Infof("    GLSL Version:   %s", gl.GoStr(gl.GetString(gl.SHADING_LANGUAGE_VERSION)))
-	log.Infof("    OpenGL Vendor:  %s", gl.GoStr(gl.GetString(gl.VENDOR)))
-	log.Infof("    Renderer:       %s", gl.GoStr(gl.GetString(gl.RENDERER)))
-	log.Infof("    ** Extensions **")
-	for i := uint32(0); i < gl.NUM_EXTENSIONS; i++ {
-		str := gl.GetStringi(gl.EXTENSIONS, i)
-		if str != nil {
-			log.Infof("      - %s", gl.GoStr(str))
-		}
-	}
-
-	log.Debug("Easel Created.")
+func newEasel() *Easel {
 	return &Easel{
-		window: w,
+		program:     nil,
+		vertexArray: newVertexArray(),
 	}
 }
 
-// Destroy ...
-func (e *Easel) Destroy() {
-	e.window.Destroy()
+func (e *Easel) attachProgram(p *Program) {
+	e.program = p
 }
 
-// CompileProgram ...
-func (e *Easel) CompileProgram(vertex, fragment string) (*Program, error) {
-	progID, err := compileProgram(vertex, fragment)
+func (e *Easel) bindArrayAttrib(vb *VertexBuffer, name string, size, stride, offset int32) error {
+	idx, err := e.program.attibLocation(name)
+	if err != nil {
+		return err
+	}
+	gl.EnableVertexAttribArray(idx)
+	vb.bind()
+	defer vb.unbind()
+	gl.VertexAttribPointer(idx, size, gl.FLOAT, false, stride, gl.PtrOffset(int(offset)))
+	return checkGLError("Error while binding array attrib.")
+}
+
+func (e *Easel) attachArrayBuffer(data []float32) (*VertexBuffer, error) {
+	var err error
+	buff := newVertexArrayBuffer()
+	buff.bind()
+	defer buff.unbind()
+	err = buff.loadDataf(data)
 	if err != nil {
 		return nil, err
 	}
-	return newProgram(e, progID), nil
+	return buff, nil
 }
 
-// CreateTexture2D ...
-func (e *Easel) CreateTexture2D(data []byte) (*Texture2D, error) {
-	return newTexture2D(data)
+func (e *Easel) attachArrayIndexBuffer(data []uint32) (*VertexBuffer, error) {
+	var err error
+	buff := newVertexIndexArrayBuffer()
+	buff.bind()
+	defer buff.unbind()
+	err = buff.loadDatai(data)
+	if err != nil {
+		return nil, err
+	}
+	return buff, nil
 }
 
-// Destroy ...
-func (p *Program) Destroy() {
-	gl.DeleteProgram(p.progID)
+// Run ...
+func (e *Easel) Run(tex *Texture2D) error {
+	var err error
+	if err = e.program.use(); err != nil {
+		return err
+	}
+	defer e.program.unuse()
+	if err = e.vertexArray.bind(); err != nil {
+		return err
+	}
+	defer e.vertexArray.unbind()
+	gl.ActiveTexture(gl.TEXTURE0)
+	if err = checkGLError("Error while activating texture 0"); err != nil {
+		return err
+	}
+	tex.bind()
+	defer tex.unbind()
+	gl.DrawArrays(gl.TRIANGLES, 0, 6*2*3)
+
+	return nil
 }

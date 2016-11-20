@@ -3,18 +3,16 @@ syntax = "proto3";
 package proto;
 
 service EaselService {
-  rpc ListPerson(RequestType) returns (stream Person) {};
-  rpc AddPerson(Person) returns (ResponseType) {}
+  rpc PrepareEasel(PrepareEaselRequest) returns (Prepare_EaselResponse) {};
 
 }
 
-message ResponseType {
-}
-
-message RequestType {
-}
-
-message Person {
+message PrepareEaselRequest {
   string name = 1;
-  int32  age  = 2;
+}
+
+message PrepareEaselResponse {
+  bool success = 1;
+  string message = 2;
+  string name = 3;
 }

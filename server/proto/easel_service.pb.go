@@ -9,9 +9,8 @@ It is generated from these files:
 	easel_service.proto
 
 It has these top-level messages:
-	ResponseType
-	RequestType
-	Person
+	PrepareEaselRequest
+	PrepareEaselResponse
 */
 package proto
 
@@ -35,50 +34,57 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto1.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type ResponseType struct {
-}
-
-func (m *ResponseType) Reset()                    { *m = ResponseType{} }
-func (m *ResponseType) String() string            { return proto1.CompactTextString(m) }
-func (*ResponseType) ProtoMessage()               {}
-func (*ResponseType) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
-
-type RequestType struct {
-}
-
-func (m *RequestType) Reset()                    { *m = RequestType{} }
-func (m *RequestType) String() string            { return proto1.CompactTextString(m) }
-func (*RequestType) ProtoMessage()               {}
-func (*RequestType) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-type Person struct {
+type PrepareEaselRequest struct {
 	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	Age  int32  `protobuf:"varint,2,opt,name=age" json:"age,omitempty"`
 }
 
-func (m *Person) Reset()                    { *m = Person{} }
-func (m *Person) String() string            { return proto1.CompactTextString(m) }
-func (*Person) ProtoMessage()               {}
-func (*Person) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (m *PrepareEaselRequest) Reset()                    { *m = PrepareEaselRequest{} }
+func (m *PrepareEaselRequest) String() string            { return proto1.CompactTextString(m) }
+func (*PrepareEaselRequest) ProtoMessage()               {}
+func (*PrepareEaselRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *Person) GetName() string {
+func (m *PrepareEaselRequest) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *Person) GetAge() int32 {
+type PrepareEaselResponse struct {
+	Success bool   `protobuf:"varint,1,opt,name=success" json:"success,omitempty"`
+	Message string `protobuf:"bytes,2,opt,name=message" json:"message,omitempty"`
+	Name    string `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
+}
+
+func (m *PrepareEaselResponse) Reset()                    { *m = PrepareEaselResponse{} }
+func (m *PrepareEaselResponse) String() string            { return proto1.CompactTextString(m) }
+func (*PrepareEaselResponse) ProtoMessage()               {}
+func (*PrepareEaselResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *PrepareEaselResponse) GetSuccess() bool {
 	if m != nil {
-		return m.Age
+		return m.Success
 	}
-	return 0
+	return false
+}
+
+func (m *PrepareEaselResponse) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *PrepareEaselResponse) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
 }
 
 func init() {
-	proto1.RegisterType((*ResponseType)(nil), "proto.ResponseType")
-	proto1.RegisterType((*RequestType)(nil), "proto.RequestType")
-	proto1.RegisterType((*Person)(nil), "proto.Person")
+	proto1.RegisterType((*PrepareEaselRequest)(nil), "proto.PrepareEaselRequest")
+	proto1.RegisterType((*PrepareEaselResponse)(nil), "proto.PrepareEaselResponse")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -92,8 +98,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for EaselService service
 
 type EaselServiceClient interface {
-	ListPerson(ctx context.Context, in *RequestType, opts ...grpc.CallOption) (EaselService_ListPersonClient, error)
-	AddPerson(ctx context.Context, in *Person, opts ...grpc.CallOption) (*ResponseType, error)
+	PrepareEasel(ctx context.Context, in *PrepareEaselRequest, opts ...grpc.CallOption) (*PrepareEaselResponse, error)
 }
 
 type easelServiceClient struct {
@@ -104,41 +109,9 @@ func NewEaselServiceClient(cc *grpc.ClientConn) EaselServiceClient {
 	return &easelServiceClient{cc}
 }
 
-func (c *easelServiceClient) ListPerson(ctx context.Context, in *RequestType, opts ...grpc.CallOption) (EaselService_ListPersonClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_EaselService_serviceDesc.Streams[0], c.cc, "/proto.EaselService/ListPerson", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &easelServiceListPersonClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type EaselService_ListPersonClient interface {
-	Recv() (*Person, error)
-	grpc.ClientStream
-}
-
-type easelServiceListPersonClient struct {
-	grpc.ClientStream
-}
-
-func (x *easelServiceListPersonClient) Recv() (*Person, error) {
-	m := new(Person)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *easelServiceClient) AddPerson(ctx context.Context, in *Person, opts ...grpc.CallOption) (*ResponseType, error) {
-	out := new(ResponseType)
-	err := grpc.Invoke(ctx, "/proto.EaselService/AddPerson", in, out, c.cc, opts...)
+func (c *easelServiceClient) PrepareEasel(ctx context.Context, in *PrepareEaselRequest, opts ...grpc.CallOption) (*PrepareEaselResponse, error) {
+	out := new(PrepareEaselResponse)
+	err := grpc.Invoke(ctx, "/proto.EaselService/PrepareEasel", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -148,49 +121,27 @@ func (c *easelServiceClient) AddPerson(ctx context.Context, in *Person, opts ...
 // Server API for EaselService service
 
 type EaselServiceServer interface {
-	ListPerson(*RequestType, EaselService_ListPersonServer) error
-	AddPerson(context.Context, *Person) (*ResponseType, error)
+	PrepareEasel(context.Context, *PrepareEaselRequest) (*PrepareEaselResponse, error)
 }
 
 func RegisterEaselServiceServer(s *grpc.Server, srv EaselServiceServer) {
 	s.RegisterService(&_EaselService_serviceDesc, srv)
 }
 
-func _EaselService_ListPerson_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(RequestType)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(EaselServiceServer).ListPerson(m, &easelServiceListPersonServer{stream})
-}
-
-type EaselService_ListPersonServer interface {
-	Send(*Person) error
-	grpc.ServerStream
-}
-
-type easelServiceListPersonServer struct {
-	grpc.ServerStream
-}
-
-func (x *easelServiceListPersonServer) Send(m *Person) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func _EaselService_AddPerson_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Person)
+func _EaselService_PrepareEasel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrepareEaselRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EaselServiceServer).AddPerson(ctx, in)
+		return srv.(EaselServiceServer).PrepareEasel(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.EaselService/AddPerson",
+		FullMethod: "/proto.EaselService/PrepareEasel",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EaselServiceServer).AddPerson(ctx, req.(*Person))
+		return srv.(EaselServiceServer).PrepareEasel(ctx, req.(*PrepareEaselRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -200,34 +151,27 @@ var _EaselService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*EaselServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddPerson",
-			Handler:    _EaselService_AddPerson_Handler,
+			MethodName: "PrepareEasel",
+			Handler:    _EaselService_PrepareEasel_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "ListPerson",
-			Handler:       _EaselService_ListPerson_Handler,
-			ServerStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "easel_service.proto",
 }
 
 func init() { proto1.RegisterFile("easel_service.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 178 bytes of a gzipped FileDescriptorProto
+	// 172 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x12, 0x4e, 0x4d, 0x2c, 0x4e,
 	0xcd, 0x89, 0x2f, 0x4e, 0x2d, 0x2a, 0xcb, 0x4c, 0x4e, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
-	0x62, 0x05, 0x53, 0x4a, 0x7c, 0x5c, 0x3c, 0x41, 0xa9, 0xc5, 0x05, 0xf9, 0x79, 0xc5, 0xa9, 0x21,
-	0x95, 0x05, 0xa9, 0x4a, 0xbc, 0x5c, 0xdc, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x60, 0xae,
-	0x1e, 0x17, 0x5b, 0x40, 0x6a, 0x51, 0x71, 0x7e, 0x9e, 0x90, 0x10, 0x17, 0x4b, 0x5e, 0x62, 0x6e,
-	0xaa, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0x67, 0x10, 0x98, 0x2d, 0x24, 0xc0, 0xc5, 0x9c, 0x98, 0x9e,
-	0x2a, 0xc1, 0xa4, 0xc0, 0xa8, 0xc1, 0x1a, 0x04, 0x62, 0x1a, 0x95, 0x71, 0xf1, 0xb8, 0x82, 0x2c,
-	0x0b, 0x86, 0xd8, 0x25, 0x64, 0xcc, 0xc5, 0xe5, 0x93, 0x59, 0x5c, 0x02, 0x33, 0x03, 0x62, 0xb7,
-	0x1e, 0x92, 0x0d, 0x52, 0xbc, 0x50, 0x31, 0x88, 0x12, 0x25, 0x06, 0x03, 0x46, 0x21, 0x43, 0x2e,
-	0x4e, 0xc7, 0x94, 0x14, 0xa8, 0x1e, 0x54, 0x79, 0x29, 0x61, 0xb8, 0x11, 0x48, 0x8e, 0x66, 0x48,
-	0x62, 0x03, 0x8b, 0x1a, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x99, 0xff, 0x2f, 0x76, 0xeb, 0x00,
-	0x00, 0x00,
+	0x62, 0x05, 0x53, 0x4a, 0x9a, 0x5c, 0xc2, 0x01, 0x45, 0xa9, 0x05, 0x89, 0x45, 0xa9, 0xae, 0x20,
+	0x45, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x42, 0x42, 0x5c, 0x2c, 0x79, 0x89, 0xb9, 0xa9,
+	0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c, 0x41, 0x60, 0xb6, 0x52, 0x1c, 0x97, 0x08, 0xaa, 0xd2, 0xe2,
+	0x82, 0xfc, 0xbc, 0xe2, 0x54, 0x21, 0x09, 0x2e, 0xf6, 0xe2, 0xd2, 0xe4, 0xe4, 0xd4, 0xe2, 0x62,
+	0xb0, 0x72, 0x8e, 0x20, 0x18, 0x17, 0x24, 0x93, 0x9b, 0x5a, 0x5c, 0x9c, 0x98, 0x9e, 0x2a, 0xc1,
+	0x04, 0x36, 0x08, 0xc6, 0x85, 0x9b, 0xcf, 0x8c, 0x30, 0xdf, 0x28, 0x92, 0x8b, 0x07, 0x6c, 0x70,
+	0x30, 0xc4, 0x9d, 0x42, 0x9e, 0x5c, 0x3c, 0xc8, 0xf6, 0x09, 0x49, 0x41, 0x5c, 0xae, 0x87, 0xc5,
+	0xbd, 0x52, 0xd2, 0x58, 0xe5, 0x20, 0x0e, 0x54, 0x62, 0x48, 0x62, 0x03, 0xcb, 0x1a, 0x03, 0x02,
+	0x00, 0x00, 0xff, 0xff, 0xa1, 0xf5, 0xe7, 0xfb, 0x0a, 0x01, 0x00, 0x00,
 }

@@ -35,15 +35,12 @@ iF4UEAA7
 `
 const VertexShader = `
 #version 330
-uniform mat4 projection;
-uniform mat4 camera;
-uniform mat4 model;
 in vec3 vert;
 in vec2 vertTexCoord;
 out vec2 fragTexCoord;
 void main() {
 		fragTexCoord = vertTexCoord;
-		gl_Position = projection * camera * model * vec4(vert, 1);
+		gl_Position = vec4(vert, 1);
 }
 `
 const FragmentShader = `
@@ -56,54 +53,44 @@ void main() {
 }
 `
 
-func setup() {
+func init() {
+}
+
+func TestRender(t *testing.T) {
 	runtime.LockOSThread()
 	glfw.Init()
-}
-func end() {
-	glfw.Terminate()
-}
+	defer glfw.Terminate()
+	s := NewStudio()
+	s.MakeCurrent()
+	defer s.Destroy()
+	e := s.MakeEasel()
+	// DO YOUR TEST
 
-func TestCreate(t *testing.T) {
-	setup()
-	defer end()
-	e := NewEasel()
-	e.Destroy()
-}
-
-func TestCompileShader(t *testing.T) {
-	setup()
-	defer end()
-	e := NewEasel()
-	_, err := e.CompileProgram(VertexShader, FragmentShader)
+	p, err := s.CompileProgram(VertexShader, FragmentShader)
 	if err != nil {
 		t.Errorf("Could not compile shader: \n** Message **\n%v", err)
 	}
-	e.Destroy()
-}
+	e.attachProgram(p)
 
-func TestCreateTexture(t *testing.T) {
-	setup()
-	defer end()
-	// DO YOUR TEST
 	data, _ := base64.StdEncoding.DecodeString(ICON)
-	e := NewEasel()
-	_, err := e.CreateTexture2D(data)
+	tex, err := s.LoadTexture2D(data)
 	if err != nil {
 		t.Errorf("Could not create texure: \n** Message **\n%v", err)
 	}
-	e.Destroy()
-}
 
-func TestDrawTexture(t *testing.T) {
-	setup()
-	defer end()
-	// DO YOUR TEST
-	data, _ := base64.StdEncoding.DecodeString(ICON)
-	e := NewEasel()
-	_, err := e.CreateTexture2D(data)
+	vb, err := e.attachArrayBuffer([]float32{
+		0, 0,
+		0, 1,
+		1, 0,
+		1, 1,
+	})
 	if err != nil {
 		t.Errorf("Could not create texure: \n** Message **\n%v", err)
 	}
-	e.Destroy()
+	e.bindArrayAttrib(vb, "vert", 2, 2, 0)
+	e.bindArrayAttrib(vb, "fragTexCoord", 2, 2, 0)
+	e.attachArrayIndexBuffer([]uint32{0, 1, 3, 0, 2, 3})
+
+	e.Run(tex)
+
 }
