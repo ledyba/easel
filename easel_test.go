@@ -2,7 +2,10 @@ package easel
 
 import (
 	"encoding/base64"
+	"image"
 	_ "image/gif"
+	"image/png"
+	"os"
 	"runtime"
 	"testing"
 
@@ -34,22 +37,23 @@ jSjiiSq+ZBakQIDQoAd7prASiy27hMILMMqAh1QeguCRRSWdzNVhMMR8WVAaoOj5D5R+BioooIIeRGih
 iF4UEAA7
 `
 const VertexShader = `
-#version 330
-in vec3 vert;
-in vec2 vertTexCoord;
-out vec2 fragTexCoord;
+#version 410 core
+layout(location = 0) in vec3 vert;
+out vec2 uv;
+
 void main() {
-		fragTexCoord = vertTexCoord;
-		gl_Position = vec4(vert, 1);
+	uv = (vert.xy+vec2(1,1))/2.0;
+	gl_Position = vec4(vert, 1);
 }
+
 `
 const FragmentShader = `
-#version 330
+#version 410
 uniform sampler2D tex;
-in vec2 fragTexCoord;
-out vec4 outputColor;
+in vec2 uv;
+layout(location = 0) out vec4 color;
 void main() {
-		outputColor = texture(tex, fragTexCoord);
+	color = texture(tex, uv);
 }
 `
 
@@ -64,12 +68,16 @@ func TestRender(t *testing.T) {
 	s.MakeCurrent()
 	defer s.Destroy()
 	e := s.MakeEasel()
+	e.Bind()
+	defer e.Unbind()
+	defer e.Destroy()
 	// DO YOUR TEST
 
 	p, err := s.CompileProgram(VertexShader, FragmentShader)
 	if err != nil {
 		t.Errorf("Could not compile shader: \n** Message **\n%v", err)
 	}
+	defer p.Destroy()
 	e.attachProgram(p)
 
 	data, _ := base64.StdEncoding.DecodeString(ICON)
@@ -77,20 +85,35 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not create texure: \n** Message **\n%v", err)
 	}
+	defer tex.Destroy()
 
-	vb, err := e.attachArrayBuffer([]float32{
-		0, 0,
-		0, 1,
-		1, 0,
-		1, 1,
+	_, err = e.attachArrayBuffer([]float32{
+		-1, -1, 0,
+		-1, 1, 0,
+		1, -1, 0,
+		1, 1, 0,
 	})
 	if err != nil {
 		t.Errorf("Could not create texure: \n** Message **\n%v", err)
 	}
-	e.bindArrayAttrib(vb, "vert", 2, 2, 0)
-	e.bindArrayAttrib(vb, "fragTexCoord", 2, 2, 0)
-	e.attachArrayIndexBuffer([]uint32{0, 1, 3, 0, 2, 3})
+	indecies, err := e.attachArrayIndexBuffer([]uint32{0, 1, 2, 2, 1, 3})
+	if err != nil {
+		t.Errorf("Could not bind array indecies: \n** Message **\n%v", err)
+	}
+	err = e.bindArrayAttrib(indecies, "vert", 3, 0, 0)
+	if err != nil {
+		t.Errorf("Could not bind array attrib: \n** Message **\n%v", err)
+	}
 
-	e.Run(tex)
+	img, err := e.Run(tex, indecies, image.Rect(0, 0, 256, 256))
+	if err != nil {
+		t.Errorf("Could not execute: \n** Message **\n%v", err)
+	}
+	file, err := os.Create("test.png")
+	if err != nil {
+		t.Error(err)
+	}
+
+	png.Encode(file, img)
 
 }

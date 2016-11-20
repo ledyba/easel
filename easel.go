@@ -1,19 +1,51 @@
 package easel
 
-import "github.com/go-gl/gl/v4.1-core/gl"
+import (
+	"errors"
+	"fmt"
+	"image"
+
+	"github.com/go-gl/gl/v4.1-core/gl"
+)
 
 // Easel ...
 type Easel struct {
-	program     *Program
-	vertexArray *VertexArray
-	textureName string
+	studio        *Studio
+	program       *Program
+	vertexArray   *VertexArray
+	frameBufferID uint32
+	textureName   string
 }
 
-func newEasel() *Easel {
-	return &Easel{
+func newEasel(s *Studio) *Easel {
+	e := &Easel{
+		studio:      s,
 		program:     nil,
 		vertexArray: newVertexArray(),
 	}
+	gl.GenFramebuffers(1, &e.frameBufferID)
+	return e
+}
+
+// Bind ...
+func (e *Easel) Bind() error {
+	var err error
+	err = e.vertexArray.bind()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Unbind ...
+func (e *Easel) Unbind() {
+	e.vertexArray.unbind()
+}
+
+// Destroy ...
+func (e *Easel) Destroy() {
+	e.vertexArray.destroy()
+	gl.DeleteFramebuffers(1, &e.frameBufferID)
 }
 
 func (e *Easel) attachProgram(p *Program) {
@@ -21,13 +53,20 @@ func (e *Easel) attachProgram(p *Program) {
 }
 
 func (e *Easel) bindArrayAttrib(vb *VertexBuffer, name string, size, stride, offset int32) error {
+	var err error
 	idx, err := e.program.attibLocation(name)
 	if err != nil {
 		return err
 	}
+	err = vb.bind()
+	if err != nil {
+		return err
+	}
 	gl.EnableVertexAttribArray(idx)
-	vb.bind()
-	defer vb.unbind()
+	err = checkGLError(fmt.Sprintf("Error while enabling vertex attrib array (location: %d)", idx))
+	if err != nil {
+		return err
+	}
 	gl.VertexAttribPointer(idx, size, gl.FLOAT, false, stride, gl.PtrOffset(int(offset)))
 	return checkGLError("Error while binding array attrib.")
 }
@@ -35,8 +74,10 @@ func (e *Easel) bindArrayAttrib(vb *VertexBuffer, name string, size, stride, off
 func (e *Easel) attachArrayBuffer(data []float32) (*VertexBuffer, error) {
 	var err error
 	buff := newVertexArrayBuffer()
-	buff.bind()
-	defer buff.unbind()
+	err = buff.bind()
+	if err != nil {
+		return nil, err
+	}
 	err = buff.loadDataf(data)
 	if err != nil {
 		return nil, err
@@ -47,8 +88,10 @@ func (e *Easel) attachArrayBuffer(data []float32) (*VertexBuffer, error) {
 func (e *Easel) attachArrayIndexBuffer(data []uint32) (*VertexBuffer, error) {
 	var err error
 	buff := newVertexIndexArrayBuffer()
-	buff.bind()
-	defer buff.unbind()
+	err = buff.bind()
+	if err != nil {
+		return nil, err
+	}
 	err = buff.loadDatai(data)
 	if err != nil {
 		return nil, err
@@ -57,23 +100,87 @@ func (e *Easel) attachArrayIndexBuffer(data []uint32) (*VertexBuffer, error) {
 }
 
 // Run ...
-func (e *Easel) Run(tex *Texture2D) error {
+func (e *Easel) Run(tex *Texture2D, indecies *VertexBuffer, size image.Rectangle) (image.Image, error) {
 	var err error
+	var texID uint32
+	gl.BindFramebuffer(gl.FRAMEBUFFER, e.frameBufferID)
+	err = checkGLError("Error while binding framebuffer")
+	if err != nil {
+		return nil, err
+	}
+
+	if err = checkGLError("Error while binding framebuffer"); err != nil {
+		return nil, err
+	}
+	gl.GenTextures(1, &texID)
+	if err = checkGLError("Error while generating framebuffer texture"); err != nil {
+		return nil, err
+	}
+	gl.BindTexture(gl.TEXTURE_2D, texID)
+	if err = checkGLError("Error while binding framebuffer texture"); err != nil {
+		return nil, err
+	}
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(size.Dx()), int32(size.Dy()), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(nil))
+	if err = checkGLError("Error while creating empty framebuffer texture"); err != nil {
+		return nil, err
+	}
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+	if err = checkGLError("Error while setting framebuffer texture parameter"); err != nil {
+		return nil, err
+	}
+	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texID, 0)
+	if err = checkGLError("Error while attaching framebuffer texture"); err != nil {
+		return nil, err
+	}
+	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE {
+		return nil, errors.New("Invalid Framebuffer Status")
+	}
+	gl.Viewport(0, 0, int32(size.Dx()), int32(size.Dy()))
+	if err = checkGLError("Error while set viewport"); err != nil {
+		return nil, err
+	}
+	//
 	if err = e.program.use(); err != nil {
-		return err
+		return nil, err
 	}
 	defer e.program.unuse()
 	if err = e.vertexArray.bind(); err != nil {
-		return err
+		return nil, err
 	}
-	defer e.vertexArray.unbind()
 	gl.ActiveTexture(gl.TEXTURE0)
 	if err = checkGLError("Error while activating texture 0"); err != nil {
-		return err
+		return nil, err
 	}
-	tex.bind()
+	gl.ActiveTexture(gl.TEXTURE0)
+	if err = tex.bind(); err != nil {
+		return nil, err
+	}
 	defer tex.unbind()
-	gl.DrawArrays(gl.TRIANGLES, 0, 6*2*3)
 
-	return nil
+	gl.DrawArrays(gl.TRIANGLES, 0, int32(indecies.length))
+	if err = checkGLError("Error on DrawArrays"); err != nil {
+		return nil, err
+	}
+	//e.studio.SwapBuffers()
+	gl.BindTexture(gl.TEXTURE_2D, texID)
+	if err = checkGLError("Error on bind framebuffer texture"); err != nil {
+		return nil, err
+	}
+	out := image.NewRGBA(size)
+	// buff := out.Pix
+	// for i := range buff {
+	// 	buff[i] = 255
+	// }
+
+	gl.GetTexImage(gl.TEXTURE_2D, 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(out.Pix))
+	if err = checkGLError("Error on GetTexImage"); err != nil {
+		return nil, err
+	}
+	gl.DeleteTextures(1, &texID)
+	if err = checkGLError("Error on DeleteTextures"); err != nil {
+		return nil, err
+	}
+
+	return out, nil
 }

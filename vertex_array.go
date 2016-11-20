@@ -14,6 +14,10 @@ func newVertexArray() *VertexArray {
 	return va
 }
 
+func (va *VertexArray) destroy() {
+	gl.DeleteVertexArrays(1, &va.id)
+}
+
 func (va *VertexArray) bind() error {
 	gl.BindVertexArray(va.id)
 	return checkGLError("Error while binding vertex array")

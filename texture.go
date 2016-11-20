@@ -70,5 +70,5 @@ func loadTexture(reader io.Reader) (uint32, error) {
 		gl.UNSIGNED_BYTE,
 		gl.Ptr(rgba.Pix))
 
-	return texture, nil
+	return texture, checkGLError("Error while loading image")
 }

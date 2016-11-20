@@ -6,6 +6,7 @@ import "github.com/go-gl/gl/v4.1-core/gl"
 type VertexBuffer struct {
 	id     uint32
 	target uint32
+	length int
 }
 
 func newVertexArrayBuffer() *VertexBuffer {
@@ -32,11 +33,13 @@ func (vb *VertexBuffer) unbind() {
 }
 
 func (vb *VertexBuffer) loadDataf(data []float32) error {
+	vb.length = len(data)
 	gl.BufferData(vb.target, len(data)*4, gl.Ptr(data), gl.STATIC_DRAW)
 	return checkGLError("Error while loading data(int)")
 }
 
 func (vb *VertexBuffer) loadDatai(data []uint32) error {
+	vb.length = len(data)
 	gl.BufferData(vb.target, len(data)*4, gl.Ptr(data), gl.STATIC_DRAW)
 	return checkGLError("Error while loading data(float)")
 }

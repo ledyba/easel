@@ -60,7 +60,12 @@ func (s *Studio) MakeCurrent() {
 
 // MakeEasel ...
 func (s *Studio) MakeEasel() *Easel {
-	return newEasel()
+	return newEasel(s)
+}
+
+// SwapBuffers ...
+func (s *Studio) SwapBuffers() {
+	s.window.SwapBuffers()
 }
 
 // CompileProgram ...
