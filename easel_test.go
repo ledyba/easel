@@ -12,6 +12,7 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
+// in GIF format.
 const ICON = `
 R0lGODlhIAAeAOfPAL8ARMsgPcwiPNMyONc+NtlFNtpFNN5MMuBRMeNXMOBaMeVaLuRcL+RdL+BgMepf
 LOlhLOVkLulkLO5jKuhmLOhmLeVpLupqLOhrLexrKvFqJ+lsK+ZvLepwK+pyK+V2LvZyJPJ2Ju95KPJ5
@@ -87,6 +88,7 @@ func TestRender(t *testing.T) {
 	}
 	defer tex.Destroy()
 
+	e.vertexArray.bind()
 	_, err = e.attachArrayBuffer([]float32{
 		-1, -1, 0,
 		-1, 1, 0,
