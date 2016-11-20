@@ -149,14 +149,15 @@ func (e *Easel) Run(tex *Texture2D, indecies *VertexBuffer, size image.Rectangle
 		return nil, err
 	}
 	gl.ActiveTexture(gl.TEXTURE0)
-	if err = checkGLError("Error while activating texture 0"); err != nil {
-		return nil, err
-	}
-	gl.ActiveTexture(gl.TEXTURE0)
 	if err = tex.bind(); err != nil {
 		return nil, err
 	}
 	defer tex.unbind()
+	textureLoc, err := e.program.attibLocation(e.textureName)
+	if err != nil {
+		return nil, err
+	}
+	gl.Uniform1i(int32(textureLoc), 0) // We use texture 0
 
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(indecies.length))
 	if err = checkGLError("Error on DrawArrays"); err != nil {
