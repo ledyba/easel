@@ -89,25 +89,26 @@ func TestRender(t *testing.T) {
 	defer tex.Destroy()
 
 	e.vertexArray.bind()
-	_, err = e.attachArrayBuffer([]float32{
-		-1, -1, 0,
-		-1, 1, 0,
-		1, -1, 0,
-		1, 1, 0,
-	})
-	if err != nil {
-		t.Errorf("Could not create texure: \n** Message **\n%v", err)
-	}
-	indecies, err := e.attachArrayIndexBuffer([]uint32{0, 1, 2, 2, 1, 3})
+	indecies, err := e.attachArrayIndexBuffer([]uint16{0, 1, 3, 2, 3, 0})
 	if err != nil {
 		t.Errorf("Could not bind array indecies: \n** Message **\n%v", err)
+	}
+	_, err = e.attachArrayBuffer([]float32{
+		-1, -1, 0,
+		1, -1, 0,
+		-1, 1, 0,
+		1, 1, 0,
+	})
+
+	if err != nil {
+		t.Errorf("Could not create texure: \n** Message **\n%v", err)
 	}
 	err = e.bindArrayAttrib(indecies, "vert", 3, 0, 0)
 	if err != nil {
 		t.Errorf("Could not bind array attrib: \n** Message **\n%v", err)
 	}
 
-	img, err := e.Run(tex, indecies, image.Rect(0, 0, 256, 256))
+	img, err := e.Run(indecies, tex, image.Rect(0, 0, 256, 256))
 	if err != nil {
 		t.Errorf("Could not execute: \n** Message **\n%v", err)
 	}

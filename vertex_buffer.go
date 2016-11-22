@@ -38,8 +38,8 @@ func (vb *VertexBuffer) loadDataf(data []float32) error {
 	return checkGLError("Error while loading data(int)")
 }
 
-func (vb *VertexBuffer) loadDatai(data []uint32) error {
+func (vb *VertexBuffer) loadDatai(data []uint16) error {
 	vb.length = len(data)
-	gl.BufferData(vb.target, len(data)*4, gl.Ptr(data), gl.STATIC_DRAW)
+	gl.BufferData(vb.target, len(data)*2, gl.Ptr(data), gl.STATIC_DRAW)
 	return checkGLError("Error while loading data(float)")
 }

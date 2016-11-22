@@ -85,7 +85,7 @@ func (e *Easel) attachArrayBuffer(data []float32) (*VertexBuffer, error) {
 	return buff, nil
 }
 
-func (e *Easel) attachArrayIndexBuffer(data []uint32) (*VertexBuffer, error) {
+func (e *Easel) attachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
 	var err error
 	buff := newVertexIndexArrayBuffer()
 	err = buff.bind()
@@ -100,7 +100,7 @@ func (e *Easel) attachArrayIndexBuffer(data []uint32) (*VertexBuffer, error) {
 }
 
 // Run ...
-func (e *Easel) Run(tex *Texture2D, indecies *VertexBuffer, size image.Rectangle) (image.Image, error) {
+func (e *Easel) Run(indecies *VertexBuffer, tex *Texture2D, size image.Rectangle) (image.Image, error) {
 	var err error
 	var texID uint32
 	gl.BindFramebuffer(gl.FRAMEBUFFER, e.frameBufferID)
@@ -112,6 +112,7 @@ func (e *Easel) Run(tex *Texture2D, indecies *VertexBuffer, size image.Rectangle
 	if err = checkGLError("Error while binding framebuffer"); err != nil {
 		return nil, err
 	}
+	/* Setup Texture for FrameBuffer */
 	gl.GenTextures(1, &texID)
 	if err = checkGLError("Error while generating framebuffer texture"); err != nil {
 		return nil, err
@@ -140,7 +141,7 @@ func (e *Easel) Run(tex *Texture2D, indecies *VertexBuffer, size image.Rectangle
 	if err = checkGLError("Error while set viewport"); err != nil {
 		return nil, err
 	}
-	//
+	/* Start rendering */
 	if err = e.program.use(); err != nil {
 		return nil, err
 	}
@@ -159,11 +160,17 @@ func (e *Easel) Run(tex *Texture2D, indecies *VertexBuffer, size image.Rectangle
 	}
 	gl.Uniform1i(int32(textureLoc), 0) // We use texture 0
 
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(indecies.length))
+	e.vertexArray.bind()
+	defer e.vertexArray.unbind()
+
+	gl.DrawElements(gl.TRIANGLES, int32(indecies.length), gl.UNSIGNED_SHORT, gl.Ptr(nil))
+
 	if err = checkGLError("Error on DrawArrays"); err != nil {
 		return nil, err
 	}
 	//e.studio.SwapBuffers()
+
+	/* Readback the output */
 	gl.BindTexture(gl.TEXTURE_2D, texID)
 	if err = checkGLError("Error on bind framebuffer texture"); err != nil {
 		return nil, err
