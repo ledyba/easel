@@ -18,6 +18,10 @@ func newProgram(progID uint32) *Program {
 	}
 }
 
+func (p *Program) destroy() {
+	gl.DeleteProgram(p.progID)
+}
+
 func (p *Program) use() error {
 	gl.UseProgram(p.progID)
 	return checkGLError("Error while binding program")

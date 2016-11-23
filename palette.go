@@ -10,16 +10,16 @@ import (
 
 // Palette ...
 type Palette struct {
-	studio        *Studio
+	easel         *Easel
 	program       *Program
 	vertexArray   *VertexArray
 	frameBufferID uint32
 	textureName   string
 }
 
-func newPalette(s *Studio) *Palette {
+func newPalette(e *Easel) *Palette {
 	p := &Palette{
-		studio:      s,
+		easel:       e,
 		program:     nil,
 		vertexArray: newVertexArray(),
 	}
@@ -100,7 +100,7 @@ func (p *Palette) attachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
 }
 
 // Run ...
-func (p *Palette) Run(indecies *VertexBuffer, tex *Texture2D, size image.Rectangle) (image.Image, error) {
+func (p *Palette) Render(indecies *VertexBuffer, tex *Texture2D, size image.Rectangle) (image.Image, error) {
 	var err error
 	var texID uint32
 	gl.BindFramebuffer(gl.FRAMEBUFFER, p.frameBufferID)
@@ -168,7 +168,7 @@ func (p *Palette) Run(indecies *VertexBuffer, tex *Texture2D, size image.Rectang
 	if err = checkGLError("Error on DrawArrays"); err != nil {
 		return nil, err
 	}
-	//e.studio.SwapBuffers()
+	//e.easel.SwapBuffers()
 
 	/* Readback the output */
 	gl.BindTexture(gl.TEXTURE_2D, texID)

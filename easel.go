@@ -6,20 +6,20 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
-// Studio ...
-type Studio struct {
+// Easel ...
+type Easel struct {
 	window *glfw.Window
 }
 
-// NewStudio ...
-func NewStudio() *Studio {
+// NewEasel ...
+func NewEasel() *Easel {
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	glfw.WindowHint(glfw.ContextVersionMajor, 4)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	w, err := glfw.CreateWindow(640, 480, "Studio", nil, nil)
+	w, err := glfw.CreateWindow(640, 480, "Easel", nil, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,7 +28,7 @@ func NewStudio() *Studio {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Infof("Studio Created.")
+	log.Infof("Easel Created.")
 	log.Infof("  ** OpenGL Info **")
 	log.Infof("    OpenGL Version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 	log.Infof("    GLSL Version:   %s", gl.GoStr(gl.GetString(gl.SHADING_LANGUAGE_VERSION)))
@@ -42,34 +42,34 @@ func NewStudio() *Studio {
 		}
 	}
 
-	log.Debug("Studio Created.")
-	return &Studio{
+	log.Debug("Easel Created.")
+	return &Easel{
 		window: w,
 	}
 }
 
 // Destroy ...
-func (s *Studio) Destroy() {
-	s.window.Destroy()
+func (e *Easel) Destroy() {
+	e.window.Destroy()
 }
 
 // MakeCurrent ...
-func (s *Studio) MakeCurrent() {
-	s.window.MakeContextCurrent()
+func (e *Easel) MakeCurrent() {
+	e.window.MakeContextCurrent()
 }
 
 // MakePalette ...
-func (s *Studio) MakePalette() *Palette {
-	return newPalette(s)
+func (e *Easel) MakePalette() *Palette {
+	return newPalette(e)
 }
 
 // SwapBuffers ...
-func (s *Studio) SwapBuffers() {
-	s.window.SwapBuffers()
+func (e *Easel) SwapBuffers() {
+	e.window.SwapBuffers()
 }
 
 // CompileProgram ...
-func (s *Studio) CompileProgram(vertex, fragment string) (*Program, error) {
+func (e *Easel) CompileProgram(vertex, fragment string) (*Program, error) {
 	progID, err := compileProgram(vertex, fragment)
 	if err != nil {
 		return nil, err
@@ -78,11 +78,6 @@ func (s *Studio) CompileProgram(vertex, fragment string) (*Program, error) {
 }
 
 // LoadTexture2D ...
-func (s *Studio) LoadTexture2D(data []byte) (*Texture2D, error) {
+func (e *Easel) LoadTexture2D(data []byte) (*Texture2D, error) {
 	return newTexture2D(data)
-}
-
-// Destroy ...
-func (p *Program) Destroy() {
-	gl.DeleteProgram(p.progID)
 }

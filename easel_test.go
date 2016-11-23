@@ -65,35 +65,35 @@ func TestRender(t *testing.T) {
 	runtime.LockOSThread()
 	glfw.Init()
 	defer glfw.Terminate()
-	s := NewStudio()
-	s.MakeCurrent()
-	defer s.Destroy()
-	e := s.MakePalette()
-	e.Bind()
-	defer e.Unbind()
+	e := NewEasel()
+	e.MakeCurrent()
 	defer e.Destroy()
+	p := e.MakePalette()
+	p.Bind()
+	defer p.Unbind()
+	defer p.Destroy()
 	// DO YOUR TEST
 
-	p, err := s.CompileProgram(VertexShader, FragmentShader)
+	prog, err := e.CompileProgram(VertexShader, FragmentShader)
 	if err != nil {
 		t.Errorf("Could not compile shader: \n** Message **\n%v", err)
 	}
 	defer p.Destroy()
-	e.attachProgram(p)
+	p.attachProgram(prog)
 
 	data, _ := base64.StdEncoding.DecodeString(ICON)
-	tex, err := s.LoadTexture2D(data)
+	tex, err := e.LoadTexture2D(data)
 	if err != nil {
 		t.Errorf("Could not create texure: \n** Message **\n%v", err)
 	}
 	defer tex.Destroy()
 
-	e.vertexArray.bind()
-	indecies, err := e.attachArrayIndexBuffer([]uint16{0, 1, 3, 2, 3, 0})
+	p.vertexArray.bind()
+	indecies, err := p.attachArrayIndexBuffer([]uint16{0, 1, 3, 2, 3, 0})
 	if err != nil {
 		t.Errorf("Could not bind array indecies: \n** Message **\n%v", err)
 	}
-	_, err = e.attachArrayBuffer([]float32{
+	_, err = p.attachArrayBuffer([]float32{
 		-1, -1, 0,
 		1, -1, 0,
 		-1, 1, 0,
@@ -103,12 +103,12 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not create texure: \n** Message **\n%v", err)
 	}
-	err = e.bindArrayAttrib(indecies, "vert", 3, 0, 0)
+	err = p.bindArrayAttrib(indecies, "vert", 3, 0, 0)
 	if err != nil {
 		t.Errorf("Could not bind array attrib: \n** Message **\n%v", err)
 	}
 
-	img, err := e.Run(indecies, tex, image.Rect(0, 0, 256, 256))
+	img, err := p.Render(indecies, tex, image.Rect(0, 0, 256, 256))
 	if err != nil {
 		t.Errorf("Could not execute: \n** Message **\n%v", err)
 	}

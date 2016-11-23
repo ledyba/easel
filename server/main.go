@@ -28,8 +28,8 @@ func main() {
 	log.Debug("Initialized.")
 
 	printStartupBanner()
-	s := easel.NewStudio()
-	s.MakeEasel()
-	defer s.Destroy()
+	e := easel.NewEasel()
+	palette := e.MakePalette()
+	defer palette.Destroy()
 
 }
