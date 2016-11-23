@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ledyba/easel"
-	"github.com/ledyba/easel/server/proto"
+	"github.com/ledyba/easel/proto"
 
 	context "golang.org/x/net/context"
 )

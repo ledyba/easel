@@ -6,7 +6,7 @@ import (
 	"net"
 	"runtime"
 
-	"github.com/ledyba/easel/server/proto"
+	"github.com/ledyba/easel/proto"
 	"google.golang.org/grpc"
 
 	_ "image/gif"
