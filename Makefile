@@ -14,6 +14,7 @@ inst:
 	go get -u "github.com/go-gl/glfw/v3.2/glfw"
 	go get -u "github.com/Sirupsen/logrus"
 	go get -u "github.com/golang/protobuf/protoc-gen-go"
+	go get -u "google.golang.org/grpc"
 
 proto:
 	cd server/proto && PATH=$(GOPATH)/bin:$(PATH) protoc --go_out=plugins=grpc:. easel_service.proto

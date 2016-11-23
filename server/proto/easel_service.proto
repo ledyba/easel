@@ -3,8 +3,8 @@ syntax = "proto3";
 package proto;
 
 service EaselService {
-  rpc PrepareEasel(PrepareEaselRequest) returns (Prepare_EaselResponse) {};
-
+  rpc PrepareEasel(PrepareEaselRequest) returns (PrepareEaselResponse) {};
+  rpc SetupEasel(SetupEaselRequest) returns (SetupEaselResponse) {};
 }
 
 message PrepareEaselRequest {
@@ -12,7 +12,12 @@ message PrepareEaselRequest {
 }
 
 message PrepareEaselResponse {
-  bool success = 1;
-  string message = 2;
-  string name = 3;
+  string name = 1;
+}
+
+message SetupEaselRequest {
+
+}
+message SetupEaselResponse {
+
 }
