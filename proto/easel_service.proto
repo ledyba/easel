@@ -8,15 +8,15 @@ service EaselService {
 }
 
 message PrepareEaselRequest {
-  string name = 1;
+  string id = 1;
 }
 
 message PrepareEaselResponse {
-  string name = 1;
+  string id = 1;
 }
 
 message SetupEaselRequest {
-
+  string id = 1;
 }
 message SetupEaselResponse {
 

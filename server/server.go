@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -8,6 +9,11 @@ import (
 	"github.com/ledyba/easel/proto"
 
 	context "golang.org/x/net/context"
+)
+
+var (
+	// ErrEaselNotFound ...
+	ErrEaselNotFound = errors.New("Easel not found")
 )
 
 // Server ...
@@ -56,23 +62,27 @@ func (serv *Server) makeEasel(name string) *EaselEntry {
 
 // PrepareEasel ...
 func (serv *Server) PrepareEasel(c context.Context, req *proto.PrepareEaselRequest) (*proto.PrepareEaselResponse, error) {
-	if len(req.Name) > 0 {
-		easelEnt := serv.fetchEasel(req.Name)
+	if len(req.Id) > 0 {
+		easelEnt := serv.fetchEasel(req.Id)
 		if easelEnt != nil {
 			return &proto.PrepareEaselResponse{
-				Name: req.Name,
+				Id: req.Id,
 			}, nil
 		}
 	}
 	name := RandString(10)
 	serv.makeEasel(name)
 	resp := &proto.PrepareEaselResponse{}
-	resp.Name = name
+	resp.Id = name
 	return resp, nil
 }
 
-// SetupEasel
+// SetupEasel ...
 func (serv *Server) SetupEasel(ctx context.Context, req *proto.SetupEaselRequest) (*proto.SetupEaselResponse, error) {
+	ent := serv.fetchEasel(req.Id)
+	if ent == nil {
+		return nil, ErrEaselNotFound
+	}
 	resp := &proto.SetupEaselResponse{}
 	return resp, nil
 }

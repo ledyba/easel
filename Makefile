@@ -17,7 +17,7 @@ inst:
 	go get -u "google.golang.org/grpc"
 
 proto:
-	cd server/proto && PATH=$(GOPATH)/bin:$(PATH) protoc --go_out=plugins=grpc:. easel_service.proto
+	cd proto && PATH=$(GOPATH)/bin:$(PATH) protoc --go_out=plugins=grpc:. easel_service.proto
 
 easel-server: $(shell find . -type f -name '*.go')
 	go build -o easel-server \
