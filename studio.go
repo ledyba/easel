@@ -58,9 +58,9 @@ func (s *Studio) MakeCurrent() {
 	s.window.MakeContextCurrent()
 }
 
-// MakeEasel ...
-func (s *Studio) MakeEasel() *Easel {
-	return newEasel(s)
+// MakePalette ...
+func (s *Studio) MakePalette() *Palette {
+	return newPalette(s)
 }
 
 // SwapBuffers ...

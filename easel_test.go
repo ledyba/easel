@@ -68,7 +68,7 @@ func TestRender(t *testing.T) {
 	s := NewStudio()
 	s.MakeCurrent()
 	defer s.Destroy()
-	e := s.MakeEasel()
+	e := s.MakePalette()
 	e.Bind()
 	defer e.Unbind()
 	defer e.Destroy()

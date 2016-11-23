@@ -8,8 +8,8 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 )
 
-// Easel ...
-type Easel struct {
+// Palette ...
+type Palette struct {
 	studio        *Studio
 	program       *Program
 	vertexArray   *VertexArray
@@ -17,20 +17,20 @@ type Easel struct {
 	textureName   string
 }
 
-func newEasel(s *Studio) *Easel {
-	e := &Easel{
+func newPalette(s *Studio) *Palette {
+	p := &Palette{
 		studio:      s,
 		program:     nil,
 		vertexArray: newVertexArray(),
 	}
-	gl.GenFramebuffers(1, &e.frameBufferID)
-	return e
+	gl.GenFramebuffers(1, &p.frameBufferID)
+	return p
 }
 
 // Bind ...
-func (e *Easel) Bind() error {
+func (p *Palette) Bind() error {
 	var err error
-	err = e.vertexArray.bind()
+	err = p.vertexArray.bind()
 	if err != nil {
 		return err
 	}
@@ -38,23 +38,23 @@ func (e *Easel) Bind() error {
 }
 
 // Unbind ...
-func (e *Easel) Unbind() {
-	e.vertexArray.unbind()
+func (p *Palette) Unbind() {
+	p.vertexArray.unbind()
 }
 
 // Destroy ...
-func (e *Easel) Destroy() {
-	e.vertexArray.destroy()
-	gl.DeleteFramebuffers(1, &e.frameBufferID)
+func (p *Palette) Destroy() {
+	p.vertexArray.destroy()
+	gl.DeleteFramebuffers(1, &p.frameBufferID)
 }
 
-func (e *Easel) attachProgram(p *Program) {
-	e.program = p
+func (p *Palette) attachProgram(prog *Program) {
+	p.program = prog
 }
 
-func (e *Easel) bindArrayAttrib(vb *VertexBuffer, name string, size, stride, offset int32) error {
+func (p *Palette) bindArrayAttrib(vb *VertexBuffer, name string, size, stride, offset int32) error {
 	var err error
-	idx, err := e.program.attibLocation(name)
+	idx, err := p.program.attibLocation(name)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (e *Easel) bindArrayAttrib(vb *VertexBuffer, name string, size, stride, off
 	return checkGLError("Error while binding array attrib.")
 }
 
-func (e *Easel) attachArrayBuffer(data []float32) (*VertexBuffer, error) {
+func (p *Palette) attachArrayBuffer(data []float32) (*VertexBuffer, error) {
 	var err error
 	buff := newVertexArrayBuffer()
 	err = buff.bind()
@@ -85,7 +85,7 @@ func (e *Easel) attachArrayBuffer(data []float32) (*VertexBuffer, error) {
 	return buff, nil
 }
 
-func (e *Easel) attachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
+func (p *Palette) attachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
 	var err error
 	buff := newVertexIndexArrayBuffer()
 	err = buff.bind()
@@ -100,10 +100,10 @@ func (e *Easel) attachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
 }
 
 // Run ...
-func (e *Easel) Run(indecies *VertexBuffer, tex *Texture2D, size image.Rectangle) (image.Image, error) {
+func (p *Palette) Run(indecies *VertexBuffer, tex *Texture2D, size image.Rectangle) (image.Image, error) {
 	var err error
 	var texID uint32
-	gl.BindFramebuffer(gl.FRAMEBUFFER, e.frameBufferID)
+	gl.BindFramebuffer(gl.FRAMEBUFFER, p.frameBufferID)
 	err = checkGLError("Error while binding framebuffer")
 	if err != nil {
 		return nil, err
@@ -142,11 +142,11 @@ func (e *Easel) Run(indecies *VertexBuffer, tex *Texture2D, size image.Rectangle
 		return nil, err
 	}
 	/* Start rendering */
-	if err = e.program.use(); err != nil {
+	if err = p.program.use(); err != nil {
 		return nil, err
 	}
-	defer e.program.unuse()
-	if err = e.vertexArray.bind(); err != nil {
+	defer p.program.unuse()
+	if err = p.vertexArray.bind(); err != nil {
 		return nil, err
 	}
 	gl.ActiveTexture(gl.TEXTURE0)
@@ -154,14 +154,14 @@ func (e *Easel) Run(indecies *VertexBuffer, tex *Texture2D, size image.Rectangle
 		return nil, err
 	}
 	defer tex.unbind()
-	textureLoc, err := e.program.attibLocation(e.textureName)
+	textureLoc, err := p.program.attibLocation(p.textureName)
 	if err != nil {
 		return nil, err
 	}
 	gl.Uniform1i(int32(textureLoc), 0) // We use texture 0
 
-	e.vertexArray.bind()
-	defer e.vertexArray.unbind()
+	p.vertexArray.bind()
+	defer p.vertexArray.unbind()
 
 	gl.DrawElements(gl.TRIANGLES, int32(indecies.length), gl.UNSIGNED_SHORT, gl.Ptr(nil))
 
