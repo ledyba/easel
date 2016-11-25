@@ -3,21 +3,36 @@ syntax = "proto3";
 package proto;
 
 service EaselService {
-  rpc PrepareEasel(PrepareEaselRequest) returns (PrepareEaselResponse) {};
-  rpc SetupEasel(SetupEaselRequest) returns (SetupEaselResponse) {};
+  rpc NewEasel(NewEaselRequest) returns (NewEaselResponse) {};
+  rpc DeleteEasel(DeleteEaselRequest) returns (DeleteEaselResponse) {};
+  rpc NewPalette(NewPaletteRequest) returns (NewPaletteResponse) {};
+  rpc DeletePalette(DeletePaletteRequest) returns (DeletePaletteResponse) {};
 }
 
-message PrepareEaselRequest {
-  string id = 1;
+message NewEaselRequest {
+  string easel_id = 1;
+}
+message NewEaselResponse {
+  string easel_id = 1;
 }
 
-message PrepareEaselResponse {
-  string id = 1;
+message DeleteEaselRequest {
+  string easel_id = 1;
+}
+message DeleteEaselResponse {
 }
 
-message SetupEaselRequest {
-  string id = 1;
+message NewPaletteRequest {
+  string easel_id = 1;
 }
-message SetupEaselResponse {
+message NewPaletteResponse {
+  string easel_id = 1;
+  string palette_id = 2;
+}
 
+message DeletePaletteRequest {
+  string easel_id = 1;
+  string palette_id = 2;
+}
+message DeletePaletteResponse {
 }

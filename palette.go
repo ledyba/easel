@@ -18,6 +18,7 @@ type Palette struct {
 }
 
 func newPalette(e *Easel) *Palette {
+	e.MakeCurrent()
 	p := &Palette{
 		easel:       e,
 		program:     nil,
@@ -99,7 +100,7 @@ func (p *Palette) attachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
 	return buff, nil
 }
 
-// Run ...
+// Render ...
 func (p *Palette) Render(indecies *VertexBuffer, tex *Texture2D, size image.Rectangle) (image.Image, error) {
 	var err error
 	var texID uint32

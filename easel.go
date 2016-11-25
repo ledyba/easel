@@ -58,8 +58,8 @@ func (e *Easel) MakeCurrent() {
 	e.window.MakeContextCurrent()
 }
 
-// MakePalette ...
-func (e *Easel) MakePalette() *Palette {
+// NewPalette ...
+func (e *Easel) NewPalette() *Palette {
 	return newPalette(e)
 }
 

@@ -9,10 +9,14 @@ It is generated from these files:
 	easel_service.proto
 
 It has these top-level messages:
-	PrepareEaselRequest
-	PrepareEaselResponse
-	SetupEaselRequest
-	SetupEaselResponse
+	NewEaselRequest
+	NewEaselResponse
+	DeleteEaselRequest
+	DeleteEaselResponse
+	NewPaletteRequest
+	NewPaletteResponse
+	DeletePaletteRequest
+	DeletePaletteResponse
 */
 package proto
 
@@ -36,67 +40,143 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto1.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type PrepareEaselRequest struct {
-	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+type NewEaselRequest struct {
+	EaselId string `protobuf:"bytes,1,opt,name=easel_id,json=easelId" json:"easel_id,omitempty"`
 }
 
-func (m *PrepareEaselRequest) Reset()                    { *m = PrepareEaselRequest{} }
-func (m *PrepareEaselRequest) String() string            { return proto1.CompactTextString(m) }
-func (*PrepareEaselRequest) ProtoMessage()               {}
-func (*PrepareEaselRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (m *NewEaselRequest) Reset()                    { *m = NewEaselRequest{} }
+func (m *NewEaselRequest) String() string            { return proto1.CompactTextString(m) }
+func (*NewEaselRequest) ProtoMessage()               {}
+func (*NewEaselRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *PrepareEaselRequest) GetId() string {
+func (m *NewEaselRequest) GetEaselId() string {
 	if m != nil {
-		return m.Id
+		return m.EaselId
 	}
 	return ""
 }
 
-type PrepareEaselResponse struct {
-	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+type NewEaselResponse struct {
+	EaselId string `protobuf:"bytes,1,opt,name=easel_id,json=easelId" json:"easel_id,omitempty"`
 }
 
-func (m *PrepareEaselResponse) Reset()                    { *m = PrepareEaselResponse{} }
-func (m *PrepareEaselResponse) String() string            { return proto1.CompactTextString(m) }
-func (*PrepareEaselResponse) ProtoMessage()               {}
-func (*PrepareEaselResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (m *NewEaselResponse) Reset()                    { *m = NewEaselResponse{} }
+func (m *NewEaselResponse) String() string            { return proto1.CompactTextString(m) }
+func (*NewEaselResponse) ProtoMessage()               {}
+func (*NewEaselResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *PrepareEaselResponse) GetId() string {
+func (m *NewEaselResponse) GetEaselId() string {
 	if m != nil {
-		return m.Id
+		return m.EaselId
 	}
 	return ""
 }
 
-type SetupEaselRequest struct {
-	Id string `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+type DeleteEaselRequest struct {
+	EaselId string `protobuf:"bytes,1,opt,name=easel_id,json=easelId" json:"easel_id,omitempty"`
 }
 
-func (m *SetupEaselRequest) Reset()                    { *m = SetupEaselRequest{} }
-func (m *SetupEaselRequest) String() string            { return proto1.CompactTextString(m) }
-func (*SetupEaselRequest) ProtoMessage()               {}
-func (*SetupEaselRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (m *DeleteEaselRequest) Reset()                    { *m = DeleteEaselRequest{} }
+func (m *DeleteEaselRequest) String() string            { return proto1.CompactTextString(m) }
+func (*DeleteEaselRequest) ProtoMessage()               {}
+func (*DeleteEaselRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
-func (m *SetupEaselRequest) GetId() string {
+func (m *DeleteEaselRequest) GetEaselId() string {
 	if m != nil {
-		return m.Id
+		return m.EaselId
 	}
 	return ""
 }
 
-type SetupEaselResponse struct {
+type DeleteEaselResponse struct {
 }
 
-func (m *SetupEaselResponse) Reset()                    { *m = SetupEaselResponse{} }
-func (m *SetupEaselResponse) String() string            { return proto1.CompactTextString(m) }
-func (*SetupEaselResponse) ProtoMessage()               {}
-func (*SetupEaselResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (m *DeleteEaselResponse) Reset()                    { *m = DeleteEaselResponse{} }
+func (m *DeleteEaselResponse) String() string            { return proto1.CompactTextString(m) }
+func (*DeleteEaselResponse) ProtoMessage()               {}
+func (*DeleteEaselResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+type NewPaletteRequest struct {
+	EaselId string `protobuf:"bytes,1,opt,name=easel_id,json=easelId" json:"easel_id,omitempty"`
+}
+
+func (m *NewPaletteRequest) Reset()                    { *m = NewPaletteRequest{} }
+func (m *NewPaletteRequest) String() string            { return proto1.CompactTextString(m) }
+func (*NewPaletteRequest) ProtoMessage()               {}
+func (*NewPaletteRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *NewPaletteRequest) GetEaselId() string {
+	if m != nil {
+		return m.EaselId
+	}
+	return ""
+}
+
+type NewPaletteResponse struct {
+	EaselId   string `protobuf:"bytes,1,opt,name=easel_id,json=easelId" json:"easel_id,omitempty"`
+	PaletteId string `protobuf:"bytes,2,opt,name=palette_id,json=paletteId" json:"palette_id,omitempty"`
+}
+
+func (m *NewPaletteResponse) Reset()                    { *m = NewPaletteResponse{} }
+func (m *NewPaletteResponse) String() string            { return proto1.CompactTextString(m) }
+func (*NewPaletteResponse) ProtoMessage()               {}
+func (*NewPaletteResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *NewPaletteResponse) GetEaselId() string {
+	if m != nil {
+		return m.EaselId
+	}
+	return ""
+}
+
+func (m *NewPaletteResponse) GetPaletteId() string {
+	if m != nil {
+		return m.PaletteId
+	}
+	return ""
+}
+
+type DeletePaletteRequest struct {
+	EaselId   string `protobuf:"bytes,1,opt,name=easel_id,json=easelId" json:"easel_id,omitempty"`
+	PaletteId string `protobuf:"bytes,2,opt,name=palette_id,json=paletteId" json:"palette_id,omitempty"`
+}
+
+func (m *DeletePaletteRequest) Reset()                    { *m = DeletePaletteRequest{} }
+func (m *DeletePaletteRequest) String() string            { return proto1.CompactTextString(m) }
+func (*DeletePaletteRequest) ProtoMessage()               {}
+func (*DeletePaletteRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+
+func (m *DeletePaletteRequest) GetEaselId() string {
+	if m != nil {
+		return m.EaselId
+	}
+	return ""
+}
+
+func (m *DeletePaletteRequest) GetPaletteId() string {
+	if m != nil {
+		return m.PaletteId
+	}
+	return ""
+}
+
+type DeletePaletteResponse struct {
+}
+
+func (m *DeletePaletteResponse) Reset()                    { *m = DeletePaletteResponse{} }
+func (m *DeletePaletteResponse) String() string            { return proto1.CompactTextString(m) }
+func (*DeletePaletteResponse) ProtoMessage()               {}
+func (*DeletePaletteResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
 func init() {
-	proto1.RegisterType((*PrepareEaselRequest)(nil), "proto.PrepareEaselRequest")
-	proto1.RegisterType((*PrepareEaselResponse)(nil), "proto.PrepareEaselResponse")
-	proto1.RegisterType((*SetupEaselRequest)(nil), "proto.SetupEaselRequest")
-	proto1.RegisterType((*SetupEaselResponse)(nil), "proto.SetupEaselResponse")
+	proto1.RegisterType((*NewEaselRequest)(nil), "proto.NewEaselRequest")
+	proto1.RegisterType((*NewEaselResponse)(nil), "proto.NewEaselResponse")
+	proto1.RegisterType((*DeleteEaselRequest)(nil), "proto.DeleteEaselRequest")
+	proto1.RegisterType((*DeleteEaselResponse)(nil), "proto.DeleteEaselResponse")
+	proto1.RegisterType((*NewPaletteRequest)(nil), "proto.NewPaletteRequest")
+	proto1.RegisterType((*NewPaletteResponse)(nil), "proto.NewPaletteResponse")
+	proto1.RegisterType((*DeletePaletteRequest)(nil), "proto.DeletePaletteRequest")
+	proto1.RegisterType((*DeletePaletteResponse)(nil), "proto.DeletePaletteResponse")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -110,8 +190,10 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for EaselService service
 
 type EaselServiceClient interface {
-	PrepareEasel(ctx context.Context, in *PrepareEaselRequest, opts ...grpc.CallOption) (*PrepareEaselResponse, error)
-	SetupEasel(ctx context.Context, in *SetupEaselRequest, opts ...grpc.CallOption) (*SetupEaselResponse, error)
+	NewEasel(ctx context.Context, in *NewEaselRequest, opts ...grpc.CallOption) (*NewEaselResponse, error)
+	DeleteEasel(ctx context.Context, in *DeleteEaselRequest, opts ...grpc.CallOption) (*DeleteEaselResponse, error)
+	NewPalette(ctx context.Context, in *NewPaletteRequest, opts ...grpc.CallOption) (*NewPaletteResponse, error)
+	DeletePalette(ctx context.Context, in *DeletePaletteRequest, opts ...grpc.CallOption) (*DeletePaletteResponse, error)
 }
 
 type easelServiceClient struct {
@@ -122,18 +204,36 @@ func NewEaselServiceClient(cc *grpc.ClientConn) EaselServiceClient {
 	return &easelServiceClient{cc}
 }
 
-func (c *easelServiceClient) PrepareEasel(ctx context.Context, in *PrepareEaselRequest, opts ...grpc.CallOption) (*PrepareEaselResponse, error) {
-	out := new(PrepareEaselResponse)
-	err := grpc.Invoke(ctx, "/proto.EaselService/PrepareEasel", in, out, c.cc, opts...)
+func (c *easelServiceClient) NewEasel(ctx context.Context, in *NewEaselRequest, opts ...grpc.CallOption) (*NewEaselResponse, error) {
+	out := new(NewEaselResponse)
+	err := grpc.Invoke(ctx, "/proto.EaselService/NewEasel", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *easelServiceClient) SetupEasel(ctx context.Context, in *SetupEaselRequest, opts ...grpc.CallOption) (*SetupEaselResponse, error) {
-	out := new(SetupEaselResponse)
-	err := grpc.Invoke(ctx, "/proto.EaselService/SetupEasel", in, out, c.cc, opts...)
+func (c *easelServiceClient) DeleteEasel(ctx context.Context, in *DeleteEaselRequest, opts ...grpc.CallOption) (*DeleteEaselResponse, error) {
+	out := new(DeleteEaselResponse)
+	err := grpc.Invoke(ctx, "/proto.EaselService/DeleteEasel", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *easelServiceClient) NewPalette(ctx context.Context, in *NewPaletteRequest, opts ...grpc.CallOption) (*NewPaletteResponse, error) {
+	out := new(NewPaletteResponse)
+	err := grpc.Invoke(ctx, "/proto.EaselService/NewPalette", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *easelServiceClient) DeletePalette(ctx context.Context, in *DeletePaletteRequest, opts ...grpc.CallOption) (*DeletePaletteResponse, error) {
+	out := new(DeletePaletteResponse)
+	err := grpc.Invoke(ctx, "/proto.EaselService/DeletePalette", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -143,46 +243,84 @@ func (c *easelServiceClient) SetupEasel(ctx context.Context, in *SetupEaselReque
 // Server API for EaselService service
 
 type EaselServiceServer interface {
-	PrepareEasel(context.Context, *PrepareEaselRequest) (*PrepareEaselResponse, error)
-	SetupEasel(context.Context, *SetupEaselRequest) (*SetupEaselResponse, error)
+	NewEasel(context.Context, *NewEaselRequest) (*NewEaselResponse, error)
+	DeleteEasel(context.Context, *DeleteEaselRequest) (*DeleteEaselResponse, error)
+	NewPalette(context.Context, *NewPaletteRequest) (*NewPaletteResponse, error)
+	DeletePalette(context.Context, *DeletePaletteRequest) (*DeletePaletteResponse, error)
 }
 
 func RegisterEaselServiceServer(s *grpc.Server, srv EaselServiceServer) {
 	s.RegisterService(&_EaselService_serviceDesc, srv)
 }
 
-func _EaselService_PrepareEasel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PrepareEaselRequest)
+func _EaselService_NewEasel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NewEaselRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EaselServiceServer).PrepareEasel(ctx, in)
+		return srv.(EaselServiceServer).NewEasel(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.EaselService/PrepareEasel",
+		FullMethod: "/proto.EaselService/NewEasel",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EaselServiceServer).PrepareEasel(ctx, req.(*PrepareEaselRequest))
+		return srv.(EaselServiceServer).NewEasel(ctx, req.(*NewEaselRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _EaselService_SetupEasel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetupEaselRequest)
+func _EaselService_DeleteEasel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteEaselRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EaselServiceServer).SetupEasel(ctx, in)
+		return srv.(EaselServiceServer).DeleteEasel(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.EaselService/SetupEasel",
+		FullMethod: "/proto.EaselService/DeleteEasel",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EaselServiceServer).SetupEasel(ctx, req.(*SetupEaselRequest))
+		return srv.(EaselServiceServer).DeleteEasel(ctx, req.(*DeleteEaselRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EaselService_NewPalette_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NewPaletteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EaselServiceServer).NewPalette(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.EaselService/NewPalette",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EaselServiceServer).NewPalette(ctx, req.(*NewPaletteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EaselService_DeletePalette_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePaletteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EaselServiceServer).DeletePalette(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.EaselService/DeletePalette",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EaselServiceServer).DeletePalette(ctx, req.(*DeletePaletteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -192,12 +330,20 @@ var _EaselService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*EaselServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "PrepareEasel",
-			Handler:    _EaselService_PrepareEasel_Handler,
+			MethodName: "NewEasel",
+			Handler:    _EaselService_NewEasel_Handler,
 		},
 		{
-			MethodName: "SetupEasel",
-			Handler:    _EaselService_SetupEasel_Handler,
+			MethodName: "DeleteEasel",
+			Handler:    _EaselService_DeleteEasel_Handler,
+		},
+		{
+			MethodName: "NewPalette",
+			Handler:    _EaselService_NewPalette_Handler,
+		},
+		{
+			MethodName: "DeletePalette",
+			Handler:    _EaselService_DeletePalette_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -207,16 +353,22 @@ var _EaselService_serviceDesc = grpc.ServiceDesc{
 func init() { proto1.RegisterFile("easel_service.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 174 bytes of a gzipped FileDescriptorProto
+	// 270 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x12, 0x4e, 0x4d, 0x2c, 0x4e,
 	0xcd, 0x89, 0x2f, 0x4e, 0x2d, 0x2a, 0xcb, 0x4c, 0x4e, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
-	0x62, 0x05, 0x53, 0x4a, 0xaa, 0x5c, 0xc2, 0x01, 0x45, 0xa9, 0x05, 0x89, 0x45, 0xa9, 0xae, 0x20,
-	0x45, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x42, 0x7c, 0x5c, 0x4c, 0x99, 0x29, 0x12, 0x8c,
-	0x0a, 0x8c, 0x1a, 0x9c, 0x41, 0x4c, 0x99, 0x29, 0x4a, 0x6a, 0x5c, 0x22, 0xa8, 0xca, 0x8a, 0x0b,
-	0xf2, 0xf3, 0x8a, 0x53, 0x31, 0xd4, 0x29, 0x73, 0x09, 0x06, 0xa7, 0x96, 0x94, 0x16, 0xe0, 0x35,
-	0x4c, 0x84, 0x4b, 0x08, 0x59, 0x11, 0xc4, 0x28, 0xa3, 0x79, 0x8c, 0x5c, 0x3c, 0x60, 0x91, 0x60,
-	0x88, 0x3b, 0x85, 0x3c, 0xb9, 0x78, 0x90, 0xed, 0x14, 0x92, 0x82, 0xb8, 0x5c, 0x0f, 0x8b, 0x7b,
-	0xa5, 0xa4, 0xb1, 0xca, 0x41, 0x4c, 0x56, 0x62, 0x10, 0x72, 0xe6, 0xe2, 0x42, 0xd8, 0x28, 0x24,
-	0x01, 0x55, 0x8c, 0xe1, 0x52, 0x29, 0x49, 0x2c, 0x32, 0x30, 0x43, 0x92, 0xd8, 0xc0, 0x72, 0xc6,
-	0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0x10, 0x55, 0xc6, 0x51, 0x4f, 0x01, 0x00, 0x00,
+	0x62, 0x05, 0x53, 0x4a, 0x3a, 0x5c, 0xfc, 0x7e, 0xa9, 0xe5, 0xae, 0x20, 0x05, 0x41, 0xa9, 0x85,
+	0xa5, 0xa9, 0xc5, 0x25, 0x42, 0x92, 0x5c, 0x1c, 0x10, 0x0d, 0x99, 0x29, 0x12, 0x8c, 0x0a, 0x8c,
+	0x1a, 0x9c, 0x41, 0xec, 0x60, 0xbe, 0x67, 0x8a, 0x92, 0x2e, 0x97, 0x00, 0x42, 0x75, 0x71, 0x41,
+	0x7e, 0x5e, 0x71, 0x2a, 0x3e, 0xe5, 0xfa, 0x5c, 0x42, 0x2e, 0xa9, 0x39, 0xa9, 0x25, 0xa9, 0xc4,
+	0x9a, 0x2f, 0xca, 0x25, 0x8c, 0xa2, 0x01, 0x62, 0x85, 0x92, 0x1e, 0x97, 0xa0, 0x5f, 0x6a, 0x79,
+	0x40, 0x62, 0x4e, 0x6a, 0x49, 0x49, 0x2a, 0x11, 0xc6, 0xf8, 0x71, 0x09, 0x21, 0xab, 0x27, 0xe8,
+	0x50, 0x21, 0x59, 0x2e, 0xae, 0x02, 0x88, 0x6a, 0x90, 0x24, 0x13, 0x58, 0x92, 0x13, 0x2a, 0xe2,
+	0x99, 0xa2, 0x14, 0xc0, 0x25, 0x02, 0x71, 0x16, 0xd1, 0x4e, 0x20, 0x64, 0xa2, 0x38, 0x97, 0x28,
+	0x9a, 0x89, 0x10, 0x47, 0x1a, 0xad, 0x60, 0xe2, 0xe2, 0x01, 0x7b, 0x3e, 0x18, 0x12, 0x5b, 0x42,
+	0xb6, 0x5c, 0x1c, 0xb0, 0x20, 0x17, 0x12, 0x83, 0xc4, 0x9d, 0x1e, 0x5a, 0x8c, 0x49, 0x89, 0x63,
+	0x88, 0x43, 0x03, 0x8e, 0x41, 0xc8, 0x8d, 0x8b, 0x1b, 0x29, 0x44, 0x85, 0x24, 0xa1, 0x2a, 0x31,
+	0xa3, 0x45, 0x4a, 0x0a, 0x9b, 0x14, 0xdc, 0x1c, 0x67, 0x2e, 0x2e, 0x44, 0x90, 0x0a, 0x49, 0x20,
+	0x2c, 0x44, 0x0d, 0x12, 0x29, 0x49, 0x2c, 0x32, 0x70, 0x43, 0x7c, 0xb8, 0x78, 0x51, 0x7c, 0x2d,
+	0x24, 0x8d, 0x62, 0x27, 0x9a, 0x51, 0x32, 0xd8, 0x25, 0x61, 0xa6, 0x25, 0xb1, 0x81, 0xa5, 0x8d,
+	0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x53, 0xf5, 0xeb, 0x8e, 0xdf, 0x02, 0x00, 0x00,
 }
