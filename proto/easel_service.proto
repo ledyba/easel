@@ -7,7 +7,11 @@ service EaselService {
   rpc DeleteEasel(DeleteEaselRequest) returns (DeleteEaselResponse) {};
   rpc NewPalette(NewPaletteRequest) returns (NewPaletteResponse) {};
   rpc DeletePalette(DeletePaletteRequest) returns (DeletePaletteResponse) {};
+
+  rpc UpdatePalette(UpdatePaletteRequest) returns (UpdatePaletteResponse) {};
 }
+
+// NewEasel
 
 message NewEaselRequest {
   string easel_id = 1;
@@ -16,11 +20,15 @@ message NewEaselResponse {
   string easel_id = 1;
 }
 
+// DeleteEasel
+
 message DeleteEaselRequest {
   string easel_id = 1;
 }
 message DeleteEaselResponse {
 }
+
+// NewPalette
 
 message NewPaletteRequest {
   string easel_id = 1;
@@ -30,9 +38,42 @@ message NewPaletteResponse {
   string palette_id = 2;
 }
 
+// DeletePalette
+
 message DeletePaletteRequest {
   string easel_id = 1;
   string palette_id = 2;
 }
 message DeletePaletteResponse {
+}
+
+// UpdatePalette
+
+message VertexAttribute {
+
+}
+message UniformAttribute {
+
+}
+message ArrayBuffer {
+  string name = 1;
+  repeated float data = 2;
+}
+message UpdatePaletteRequest {
+  string easel_id = 1;
+  string palette_id = 2;
+  // Shader
+  string vertex_shader = 3;
+  string fragment_shader = 4;
+  // VertexBuffer
+  repeated ArrayBuffer buffers = 5;
+  // VertexElementBuffer
+  repeated int32 indecies = 6;
+  // VertexAttributes
+  repeated VertexAttribute vertex_arrtibutes = 7;
+  // UniformAttributes
+  repeated UniformAttribute uniform_arrtibute = 8;
+}
+
+message UpdatePaletteResponse {
 }

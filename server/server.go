@@ -27,10 +27,10 @@ type Server struct {
 
 // EaselEntry ...
 type EaselEntry struct {
-	easel    *easel.Easel
-	usedAt   time.Time
-	mutex    *sync.Mutex
-	palettes map[string]*easel.Palette
+	easel      *easel.Easel
+	usedAt     time.Time
+	mutex      *sync.Mutex
+	paletteMap map[string]*PaletteEntry
 }
 
 func (ent *EaselEntry) lock() {
@@ -38,6 +38,23 @@ func (ent *EaselEntry) lock() {
 	ent.usedAt = time.Now()
 }
 func (ent *EaselEntry) unlock() {
+	ent.mutex.Unlock()
+}
+
+// PaletteEntry ...
+type PaletteEntry struct {
+	palette       *easel.Palette
+	usedAt        time.Time
+	mutex         *sync.Mutex
+	vertexBuffers map[string]*easel.VertexBuffer
+	indecies      *easel.VertexBuffer
+}
+
+func (ent *PaletteEntry) lock() {
+	ent.mutex.Lock()
+	ent.usedAt = time.Now()
+}
+func (ent *PaletteEntry) unlock() {
 	ent.mutex.Unlock()
 }
 
@@ -75,10 +92,10 @@ func (serv *Server) deleteEasel(name string) bool {
 func (serv *Server) makeEasel(name string) *EaselEntry {
 	e := easel.NewEasel()
 	ent := &EaselEntry{
-		easel:    e,
-		usedAt:   time.Now(),
-		mutex:    new(sync.Mutex),
-		palettes: make(map[string]*easel.Palette),
+		easel:      e,
+		usedAt:     time.Now(),
+		mutex:      new(sync.Mutex),
+		paletteMap: make(map[string]*PaletteEntry),
 	}
 	serv.easelMap[name] = ent
 	return ent
@@ -123,7 +140,12 @@ func (serv *Server) NewPalette(ctx context.Context, req *proto.NewPaletteRequest
 	defer ent.unlock()
 	palette := ent.easel.NewPalette()
 	name := RandString(10)
-	ent.palettes[name] = palette
+	ent.paletteMap[name] = &PaletteEntry{
+		palette:       palette,
+		usedAt:        time.Now(),
+		mutex:         new(sync.Mutex),
+		vertexBuffers: make(map[string]*easel.VertexBuffer),
+	}
 	resp := &proto.NewPaletteResponse{
 		EaselId:   req.EaselId,
 		PaletteId: name,
@@ -133,19 +155,74 @@ func (serv *Server) NewPalette(ctx context.Context, req *proto.NewPaletteRequest
 
 // DeletePalette ...
 func (serv *Server) DeletePalette(ctx context.Context, req *proto.DeletePaletteRequest) (*proto.DeletePaletteResponse, error) {
-	ent := serv.fetchEasel(req.EaselId)
-	if ent == nil {
+	easelEnt := serv.fetchEasel(req.EaselId)
+	if easelEnt == nil {
 		return nil, ErrEaselNotFound
 	}
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
-	ent.lock()
-	defer ent.unlock()
-	pal := ent.palettes[req.PaletteId]
-	if pal == nil {
+	easelEnt.lock()
+	defer easelEnt.unlock()
+	paletteEnt := easelEnt.paletteMap[req.PaletteId]
+	if paletteEnt == nil {
 		return nil, ErrPaletteNotFound
 	}
-	ent.easel.MakeCurrent()
-	pal.Destroy()
+	easelEnt.easel.MakeCurrent()
+	paletteEnt.palette.Destroy()
 	return &proto.DeletePaletteResponse{}, nil
+}
+
+// UpdatePalette ...
+func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteRequest) (*proto.UpdatePaletteResponse, error) {
+	var err error
+	easelEnt := serv.fetchEasel(req.EaselId)
+	if easelEnt == nil {
+		return nil, ErrEaselNotFound
+	}
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	easelEnt.lock()
+	defer easelEnt.unlock()
+	paletteEnt := easelEnt.paletteMap[req.PaletteId]
+	if paletteEnt == nil {
+		return nil, ErrPaletteNotFound
+	}
+	paletteEnt.lock()
+	defer paletteEnt.unlock()
+	e := easelEnt.easel
+	p := paletteEnt.palette
+	e.MakeCurrent()
+
+	/* program */
+	prog, err := e.CompileProgram(req.VertexShader, req.FragmentShader)
+	if err != nil {
+		return nil, err
+	}
+	if p.Program() != nil {
+		p.Program().Destroy()
+	}
+	p.AttachProgram(prog)
+
+	/* ArrayBuffer */
+	var vb *easel.VertexBuffer
+	for _, buf := range req.Buffers {
+		vb, err = p.AttachArrayBuffer(buf.Data)
+		if err != nil {
+			return nil, err
+		}
+		paletteEnt.vertexBuffers[buf.Name] = vb
+	}
+
+	/* ArrayIndexBuffer */
+	indecies := make([]uint16, len(req.Indecies))
+	for i, v := range req.Indecies {
+		indecies[i] = uint16(v)
+	}
+	vb, err = p.AttachArrayIndexBuffer(indecies)
+	if err != nil {
+		return nil, err
+	}
+	paletteEnt.indecies = vb
+
+	return &proto.UpdatePaletteResponse{}, nil
 }

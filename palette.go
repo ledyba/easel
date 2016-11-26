@@ -45,12 +45,18 @@ func (p *Palette) Unbind() {
 
 // Destroy ...
 func (p *Palette) Destroy() {
-	p.vertexArray.destroy()
+	p.vertexArray.Destroy()
 	gl.DeleteFramebuffers(1, &p.frameBufferID)
 }
 
-func (p *Palette) attachProgram(prog *Program) {
+// AttachProgram ...
+func (p *Palette) AttachProgram(prog *Program) {
 	p.program = prog
+}
+
+// Program ...
+func (p *Palette) Program() *Program {
+	return p.program
 }
 
 func (p *Palette) bindArrayAttrib(vb *VertexBuffer, name string, size, stride, offset int32) error {
@@ -72,7 +78,8 @@ func (p *Palette) bindArrayAttrib(vb *VertexBuffer, name string, size, stride, o
 	return checkGLError("Error while binding array attrib.")
 }
 
-func (p *Palette) attachArrayBuffer(data []float32) (*VertexBuffer, error) {
+// AttachArrayBuffer ...
+func (p *Palette) AttachArrayBuffer(data []float32) (*VertexBuffer, error) {
 	var err error
 	buff := newVertexArrayBuffer()
 	err = buff.bind()
@@ -86,7 +93,8 @@ func (p *Palette) attachArrayBuffer(data []float32) (*VertexBuffer, error) {
 	return buff, nil
 }
 
-func (p *Palette) attachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
+// AttachArrayIndexBuffer ...
+func (p *Palette) AttachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
 	var err error
 	buff := newVertexIndexArrayBuffer()
 	err = buff.bind()

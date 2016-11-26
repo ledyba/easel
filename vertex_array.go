@@ -14,7 +14,8 @@ func newVertexArray() *VertexArray {
 	return va
 }
 
-func (va *VertexArray) destroy() {
+// Destroy ...
+func (va *VertexArray) Destroy() {
 	gl.DeleteVertexArrays(1, &va.id)
 }
 

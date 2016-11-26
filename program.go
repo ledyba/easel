@@ -18,8 +18,11 @@ func newProgram(progID uint32) *Program {
 	}
 }
 
-func (p *Program) destroy() {
+// Destroy ...
+func (p *Program) Destroy() error {
 	gl.DeleteProgram(p.progID)
+	p.progID = 0
+	return checkGLError("Error while deleting program")
 }
 
 func (p *Program) use() error {
@@ -29,12 +32,6 @@ func (p *Program) use() error {
 
 func (p *Program) unuse() {
 	gl.UseProgram(0)
-}
-
-func (p *Program) delete() error {
-	gl.DeleteProgram(p.progID)
-	p.progID = 0
-	return checkGLError("Error while deleting program")
 }
 
 func (p *Program) attibLocation(name string) (uint32, error) {

@@ -79,7 +79,7 @@ func TestRender(t *testing.T) {
 		t.Errorf("Could not compile shader: \n** Message **\n%v", err)
 	}
 	defer p.Destroy()
-	p.attachProgram(prog)
+	p.AttachProgram(prog)
 
 	data, _ := base64.StdEncoding.DecodeString(ICON)
 	tex, err := e.LoadTexture2D(data)
@@ -89,11 +89,11 @@ func TestRender(t *testing.T) {
 	defer tex.Destroy()
 
 	p.vertexArray.bind()
-	indecies, err := p.attachArrayIndexBuffer([]uint16{0, 1, 3, 2, 3, 0})
+	indecies, err := p.AttachArrayIndexBuffer([]uint16{0, 1, 3, 2, 3, 0})
 	if err != nil {
 		t.Errorf("Could not bind array indecies: \n** Message **\n%v", err)
 	}
-	_, err = p.attachArrayBuffer([]float32{
+	_, err = p.AttachArrayBuffer([]float32{
 		-1, -1, 0,
 		1, -1, 0,
 		-1, 1, 0,

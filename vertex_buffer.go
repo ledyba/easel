@@ -23,6 +23,11 @@ func newVertexIndexArrayBuffer() *VertexBuffer {
 	return vb
 }
 
+// Destroy ...
+func (vb *VertexBuffer) Destroy() {
+	gl.DeleteBuffers(1, &vb.id)
+}
+
 func (vb *VertexBuffer) bind() error {
 	gl.BindBuffer(vb.target, vb.id)
 	return checkGLError("Error while binding vertex buffer")
