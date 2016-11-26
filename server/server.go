@@ -1,10 +1,17 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/chai2010/webp"
 
 	"github.com/ledyba/easel"
 	"github.com/ledyba/easel/proto"
@@ -17,6 +24,8 @@ var (
 	ErrEaselNotFound = errors.New("Easel not found")
 	// ErrPaletteNotFound ...
 	ErrPaletteNotFound = errors.New("Palette not found")
+	// ErrVertexBufferNotFound ...
+	ErrVertexBufferNotFound = errors.New("VertexBuffer not found")
 )
 
 // Server ...
@@ -224,5 +233,80 @@ func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteR
 	}
 	paletteEnt.indecies = vb
 
+	// Binding VertexAttrib
+	for _, attrib := range req.VertexArrtibutes {
+		vb = paletteEnt.vertexBuffers[attrib.BufferName]
+		if vb == nil {
+			return nil, ErrVertexBufferNotFound
+		}
+		err = p.BindArrayAttrib(vb, attrib.ArgumentName, attrib.ElementSize, attrib.Stride, attrib.Offset)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &proto.UpdatePaletteResponse{}, nil
+}
+
+// Render ...
+func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*proto.RenderResponse, error) {
+	var err error
+	easelEnt := serv.fetchEasel(req.EaselId)
+	if easelEnt == nil {
+		return nil, ErrEaselNotFound
+	}
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	easelEnt.lock()
+	defer easelEnt.unlock()
+	paletteEnt := easelEnt.paletteMap[req.PaletteId]
+	if paletteEnt == nil {
+		return nil, ErrPaletteNotFound
+	}
+	paletteEnt.lock()
+	defer paletteEnt.unlock()
+	e := easelEnt.easel
+	p := paletteEnt.palette
+	e.MakeCurrent()
+	size := image.Rect(0, 0, int(req.OutWidth), int(req.OutHeight))
+	tex, err := e.LoadTexture2D(req.Input)
+	if err != nil {
+		return nil, err
+	}
+	defer tex.Destroy()
+	img, err := p.Render(paletteEnt.indecies, tex, size)
+	if err != nil {
+		return nil, err
+	}
+	resp := &proto.RenderResponse{}
+	var bytes bytes.Buffer
+	writer := bufio.NewWriter(&bytes)
+	switch req.OutFormat {
+	case "image/png":
+		err = png.Encode(writer, img)
+		if err != nil {
+			return nil, err
+		}
+	case "image/jpeg":
+	case "image/jpg":
+		err = jpeg.Encode(writer, img, &jpeg.Options{
+			Quality: int(req.OutQuality),
+		})
+		if err != nil {
+			return nil, err
+		}
+	case "image/webp":
+		err = webp.Encode(writer, img, &webp.Options{
+			Quality: req.OutQuality,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = writer.Flush()
+	if err != nil {
+		return nil, err
+	}
+	resp.Output = bytes.Bytes()
+	return resp, nil
 }

@@ -59,7 +59,7 @@ func (p *Palette) Program() *Program {
 	return p.program
 }
 
-func (p *Palette) bindArrayAttrib(vb *VertexBuffer, name string, size, stride, offset int32) error {
+func (p *Palette) BindArrayAttrib(vb *VertexBuffer, name string, size, stride, offset int32) error {
 	var err error
 	idx, err := p.program.attibLocation(name)
 	if err != nil {
