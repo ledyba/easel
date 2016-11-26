@@ -25,4 +25,5 @@ easel-server: $(shell find . -type f -name '*.go')
 					"github.com/ledyba/easel/server"
 
 cl:
-	find . -type f -name \*.go | xargs wc -l
+	@find . -type f -name \*.go | xargs wc -l
+	@echo $(shell git log --pretty=oneline | wc -l) commits.
