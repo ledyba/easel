@@ -25,18 +25,32 @@ func (p *Program) Destroy() error {
 	return checkGLError("Error while deleting program")
 }
 
-func (p *Program) use() error {
+// Use ...
+func (p *Program) Use() error {
 	gl.UseProgram(p.progID)
 	return checkGLError("Error while binding program")
 }
 
-func (p *Program) unuse() {
+// Unuse ...
+func (p *Program) Unuse() {
 	gl.UseProgram(0)
 }
 
-func (p *Program) attibLocation(name string) (uint32, error) {
-	idx := uint32(gl.GetAttribLocation(p.progID, gl.Str(name+"\x00")))
+func (p *Program) attibLocation(name string) (int32, error) {
+	idx := gl.GetAttribLocation(p.progID, gl.Str(name+"\x00"))
 	err := checkGLError("error while get attrib location")
+	if idx < 0 {
+		return -1, fmt.Errorf("Attribute not found: %s", name)
+	}
+	return idx, err
+}
+
+func (p *Program) uniformLocation(name string) (int32, error) {
+	idx := gl.GetUniformLocation(p.progID, gl.Str(name+"\x00"))
+	err := checkGLError("error while get uniform location")
+	if idx < 0 {
+		return -1, fmt.Errorf("Attribute not found: %s", name)
+	}
 	return idx, err
 }
 

@@ -50,8 +50,9 @@ func (p *Palette) Destroy() {
 }
 
 // AttachProgram ...
-func (p *Palette) AttachProgram(prog *Program) {
+func (p *Palette) AttachProgram(prog *Program, textureName string) {
 	p.program = prog
+	p.textureName = textureName
 }
 
 // Program ...
@@ -59,6 +60,7 @@ func (p *Palette) Program() *Program {
 	return p.program
 }
 
+// BindArrayAttrib ...
 func (p *Palette) BindArrayAttrib(vb *VertexBuffer, name string, size, stride, offset int32) error {
 	var err error
 	idx, err := p.program.attibLocation(name)
@@ -69,13 +71,38 @@ func (p *Palette) BindArrayAttrib(vb *VertexBuffer, name string, size, stride, o
 	if err != nil {
 		return err
 	}
-	gl.EnableVertexAttribArray(idx)
+	gl.EnableVertexAttribArray(uint32(idx))
 	err = checkGLError(fmt.Sprintf("Error while enabling vertex attrib array (location: %d)", idx))
 	if err != nil {
 		return err
 	}
-	gl.VertexAttribPointer(idx, size, gl.FLOAT, false, stride, gl.PtrOffset(int(offset)))
+	gl.VertexAttribPointer(uint32(idx), size, gl.FLOAT, false, stride, gl.PtrOffset(int(offset)))
 	return checkGLError("Error while binding array attrib.")
+}
+
+// BindUniformf ...
+func (p *Palette) BindUniformf(name string, vecDim int, data []float32) error {
+	var err error
+	loc, err := p.program.uniformLocation(name)
+	if err != nil {
+		return err
+	}
+	switch vecDim {
+	case 1:
+		gl.Uniform1fv(loc, int32(len(data)), &data[0])
+		return checkGLError("Error on glUniform1fv")
+	case 2:
+		gl.Uniform2fv(loc, int32(len(data)/2), &data[0])
+		return checkGLError("Error on glUniform2fv")
+	case 3:
+		gl.Uniform3fv(loc, int32(len(data)/3), &data[0])
+		return checkGLError("Error on glUniform3fv")
+	case 4:
+		gl.Uniform4fv(loc, int32(len(data)/4), &data[0])
+		return checkGLError("Error on glUniform4fv")
+	default:
+		return fmt.Errorf("Unsupported vector dimension: %d", vecDim)
+	}
 }
 
 // AttachArrayBuffer ...
@@ -151,10 +178,10 @@ func (p *Palette) Render(indecies *VertexBuffer, tex *Texture2D, size image.Rect
 		return nil, err
 	}
 	/* Start rendering */
-	if err = p.program.use(); err != nil {
+	if err = p.program.Use(); err != nil {
 		return nil, err
 	}
-	defer p.program.unuse()
+	defer p.program.Unuse()
 	if err = p.vertexArray.bind(); err != nil {
 		return nil, err
 	}
@@ -163,7 +190,7 @@ func (p *Palette) Render(indecies *VertexBuffer, tex *Texture2D, size image.Rect
 		return nil, err
 	}
 	defer tex.unbind()
-	textureLoc, err := p.program.attibLocation(p.textureName)
+	textureLoc, err := p.program.uniformLocation(p.textureName)
 	if err != nil {
 		return nil, err
 	}
@@ -185,10 +212,6 @@ func (p *Palette) Render(indecies *VertexBuffer, tex *Texture2D, size image.Rect
 		return nil, err
 	}
 	out := image.NewRGBA(size)
-	// buff := out.Pix
-	// for i := range buff {
-	// 	buff[i] = 255
-	// }
 
 	gl.GetTexImage(gl.TEXTURE_2D, 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(out.Pix))
 	if err = checkGLError("Error on GetTexImage"); err != nil {

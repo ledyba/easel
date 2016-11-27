@@ -5,6 +5,7 @@ import (
 	"image"
 	_ "image/gif"
 	"image/png"
+	"math"
 	"os"
 	"runtime"
 	"testing"
@@ -51,10 +52,16 @@ void main() {
 const FragmentShader = `
 #version 410
 uniform sampler2D tex;
+uniform vec2 offset[441];
+uniform vec4 kernel[441];
 in vec2 uv;
 layout(location = 0) out vec4 color;
 void main() {
-	color = texture(tex, uv);
+	vec4 sum = vec4(0,0,0,0);
+	for (int i = 0; i < 441; i++) {
+			sum += texture(tex, uv.st + offset[i]) * kernel[i];
+	}
+	color = sum;
 }
 `
 
@@ -78,8 +85,10 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not compile shader: \n** Message **\n%v", err)
 	}
-	defer p.Destroy()
-	p.AttachProgram(prog)
+	p.AttachProgram(prog, "tex")
+	prog.Use()
+	defer prog.Unuse()
+	defer prog.Destroy()
 
 	data, _ := base64.StdEncoding.DecodeString(ICON)
 	tex, err := e.LoadTexture2D(data)
@@ -103,9 +112,49 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not create texure: \n** Message **\n%v", err)
 	}
-	err = p.bindArrayAttrib(indecies, "vert", 3, 0, 0)
+	err = p.BindArrayAttrib(indecies, "vert", 3, 0, 0)
 	if err != nil {
 		t.Errorf("Could not bind array attrib: \n** Message **\n%v", err)
+	}
+
+	offset := make([]float32, 441*2)
+	kernel := make([]float32, 441*4)
+	idx := 0
+	sumk := float32(0.0)
+	for x := -10; x <= 10; x++ {
+		for y := -10; y <= 10; y++ {
+			offset[idx*2+0] = float32(x) / float32(32)
+			offset[idx*2+1] = float32(y) / float32(32)
+			fx := float64(x) * math.Pi
+			fy := float64(y) * math.Pi
+			kx := float64(1)
+			if x != 0 {
+				kx = 10 * math.Sin(fx) * math.Sin(fx/10.0) / (fx * fx)
+			}
+			ky := float64(1)
+			if y != 0 {
+				ky = 10 * math.Sin(fy) * math.Sin(fy/10.0) / (fy * fy)
+			}
+			k := float32(kx * ky)
+			sumk += k
+			kernel[idx*4+0] = k
+			kernel[idx*4+1] = k
+			kernel[idx*4+2] = k
+			kernel[idx*4+3] = k
+			idx++
+		}
+	}
+	if sumk != 1.0 {
+		t.Errorf("sumk should be 1, but %f", sumk)
+	}
+
+	err = p.BindUniformf("offset", 2, offset)
+	if err != nil {
+		t.Error(err)
+	}
+	err = p.BindUniformf("kernel", 4, kernel)
+	if err != nil {
+		t.Error(err)
 	}
 
 	img, err := p.Render(indecies, tex, image.Rect(0, 0, 256, 256))
