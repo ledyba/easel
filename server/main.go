@@ -23,7 +23,7 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var port = flag.Int("port", 14514, "port to listen")
+var port = flag.Int("port", 3000, "port to listen")
 
 func main() {
 	var err error

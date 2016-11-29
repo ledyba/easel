@@ -210,7 +210,7 @@ func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteR
 	if p.Program() != nil {
 		p.Program().Destroy()
 	}
-	p.AttachProgram(prog)
+	p.AttachProgram(prog, req.TextureName)
 
 	/* ArrayBuffer */
 	var vb *easel.VertexBuffer

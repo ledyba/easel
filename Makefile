@@ -9,6 +9,9 @@ run-test: easel-server
 test:
 	go test .
 
+test-rpc: easel-server easel-client
+	bash -c "./easel-server & && ./easel-client; join"
+
 inst:
 	go get -u "github.com/go-gl/gl/v4.1-core/gl"
 	go get -u "github.com/go-gl/glfw/v3.2/glfw"
@@ -24,6 +27,10 @@ easel-server: $(shell find . -type f -name '*.go')
 	go build -o easel-server \
 					-ldflags "-v -X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
 					"github.com/ledyba/easel/server"
+
+easel-client: $(shell find . -type f -name '*.go')
+	go build -o easel-client \
+					"github.com/ledyba/easel/client-sample"
 
 cl:
 	@find . -type f -name \*.go | xargs wc -l

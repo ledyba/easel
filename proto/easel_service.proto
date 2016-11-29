@@ -74,14 +74,15 @@ message UpdatePaletteRequest {
   // Shader
   string vertex_shader = 3;
   string fragment_shader = 4;
+  string texture_name = 5;
   // VertexBuffer
-  repeated ArrayBuffer buffers = 5;
+  repeated ArrayBuffer buffers = 6;
   // VertexElementBuffer
-  repeated int32 indecies = 6;
+  repeated int32 indecies = 7;
   // VertexAttributes
-  repeated VertexAttribute vertex_arrtibutes = 7;
+  repeated VertexAttribute vertex_arrtibutes = 8;
   // UniformAttributes
-  repeated UniformAttribute uniform_arrtibute = 8;
+  repeated UniformAttribute uniform_arrtibute = 9;
 }
 
 message UpdatePaletteResponse {
