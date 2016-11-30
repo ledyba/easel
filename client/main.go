@@ -2,19 +2,30 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"os"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/ledyba/easel/proto"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
-
-import "google.golang.org/grpc"
 
 var server *string = flag.String("server", "localhost:3000", "server to connect")
 
 func main() {
 	flag.Parse()
-	log.Printf("*** Easel Client Example ***")
+	args := flag.Args()
+	printStartupBanner()
+	if len(args) <= 0 {
+		fmt.Fprintf(os.Stderr, `
+Usage of %s:
+    %s [OPTIONS] FILES...
+Options:
+`, os.Args[0], os.Args[0])
+		flag.PrintDefaults()
+		return
+	}
 	var err error
 	conn, err := grpc.Dial(*server, grpc.WithInsecure())
 	if err != nil {
