@@ -27,12 +27,12 @@ proto:
 
 easel-server: $(shell find . -type f -name '*.go')
 	go build -o easel-server \
-					-ldflags "-v -X 'cli.gitRev=$(GIT_REV)' -X 'cli.buildAt=$(NOW)'" \
+					-ldflags "-v -X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
 					"github.com/ledyba/easel/server"
 
 easel-client: $(shell find . -type f -name '*.go')
 	go build -o easel-client \
-					-ldflags "-v -X 'cli.gitRev=$(GIT_REV)' -X 'cli.buildAt=$(NOW)'" \
+					-ldflags "-v -X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
 					"github.com/ledyba/easel/client"
 
 cl:
