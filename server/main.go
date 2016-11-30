@@ -25,6 +25,13 @@ func init() {
 
 var port = flag.Int("port", 3000, "port to listen")
 
+func startServer(lis net.Listener, em *EaselMaker) {
+	log.Infof("Now listen at :%d", *port)
+	server := grpc.NewServer()
+	proto.RegisterEaselServiceServer(server, newServer(em))
+	server.Serve(lis)
+}
+
 func main() {
 	var err error
 	err = glfw.Init()
@@ -40,10 +47,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	server := grpc.NewServer()
-
-	proto.RegisterEaselServiceServer(server, newServer())
-	log.Infof("Now listen at :%d", *port)
-	server.Serve(lis)
-
+	em := NewEaselMaker()
+	go startServer(lis, em)
+	em.Start()
 }

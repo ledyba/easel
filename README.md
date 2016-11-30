@@ -2,4 +2,4 @@
 
 ## Aims & Background
 
-In our datacenter, a few machines are equipped with GPU, but other machines also need GPU to process iamges.
+In our datacenter, computation server equipped with GPU and web servers are separated.

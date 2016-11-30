@@ -24,6 +24,7 @@ func NewEasel() *Easel {
 		log.Fatal(err)
 	}
 	w.MakeContextCurrent()
+	defer glfw.DetachCurrentContext()
 	err = gl.Init()
 	if err != nil {
 		log.Fatal(err)
@@ -58,9 +59,22 @@ func (e *Easel) MakeCurrent() {
 	e.window.MakeContextCurrent()
 }
 
+// DetachCurrent ...
+func (e *Easel) DetachCurrent() {
+	glfw.DetachCurrentContext()
+}
+
 // NewPalette ...
 func (e *Easel) NewPalette() *Palette {
-	return newPalette(e)
+	e.MakeCurrent()
+	defer e.DetachCurrent()
+	p := &Palette{
+		easel:       e,
+		program:     nil,
+		vertexArray: newVertexArray(),
+	}
+	gl.GenFramebuffers(1, &p.frameBufferID)
+	return p
 }
 
 // SwapBuffers ...

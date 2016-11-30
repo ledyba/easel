@@ -23,17 +23,31 @@ func main() {
 	defer conn.Close()
 
 	serv := proto.NewEaselServiceClient(conn)
-	resp, err := serv.NewEasel(context.Background(), &proto.NewEaselRequest{
+	eresp, err := serv.NewEasel(context.Background(), &proto.NewEaselRequest{
 		EaselId: "",
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Easel Created: %s", resp.EaselId)
+	log.Printf("Easel Created: %s", eresp.EaselId)
 	defer func() {
 		serv.DeleteEasel(context.Background(), &proto.DeleteEaselRequest{
-			EaselId: resp.EaselId,
+			EaselId: eresp.EaselId,
 		})
-		log.Printf("Easel Deleted: %s", resp.EaselId)
+		log.Printf("Easel Deleted: %s", eresp.EaselId)
+	}()
+	presp, err := serv.NewPalette(context.Background(), &proto.NewPaletteRequest{
+		EaselId: eresp.EaselId,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Palette Created: %s", presp.PaletteId)
+	defer func() {
+		serv.DeletePalette(context.Background(), &proto.DeletePaletteRequest{
+			EaselId:   eresp.EaselId,
+			PaletteId: presp.PaletteId,
+		})
+		log.Printf("Palette Deleted: %s", presp.PaletteId)
 	}()
 }

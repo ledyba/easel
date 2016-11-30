@@ -17,17 +17,6 @@ type Palette struct {
 	textureName   string
 }
 
-func newPalette(e *Easel) *Palette {
-	e.MakeCurrent()
-	p := &Palette{
-		easel:       e,
-		program:     nil,
-		vertexArray: newVertexArray(),
-	}
-	gl.GenFramebuffers(1, &p.frameBufferID)
-	return p
-}
-
 // Bind ...
 func (p *Palette) Bind() error {
 	var err error

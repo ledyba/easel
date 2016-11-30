@@ -10,7 +10,9 @@ test:
 	go test .
 
 test-rpc: easel-server easel-client
-	bash -c "./easel-server & && ./easel-client; join"
+	./easel-server
+	./easel-client
+
 
 inst:
 	go get -u "github.com/go-gl/gl/v4.1-core/gl"

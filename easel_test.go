@@ -74,6 +74,7 @@ func TestRender(t *testing.T) {
 	defer glfw.Terminate()
 	e := NewEasel()
 	e.MakeCurrent()
+	defer e.DetachCurrent()
 	defer e.Destroy()
 	p := e.NewPalette()
 	p.Bind()

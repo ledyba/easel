@@ -30,6 +30,7 @@ var (
 
 // Server ...
 type Server struct {
+	easelMaker *EaselMaker
 	easelMutex *sync.Mutex
 	easelMap   map[string]*EaselEntry
 }
@@ -63,13 +64,16 @@ func (ent *PaletteEntry) lock() {
 	ent.mutex.Lock()
 	ent.usedAt = time.Now()
 }
+
 func (ent *PaletteEntry) unlock() {
 	ent.mutex.Unlock()
 }
 
-func newServer() *Server {
+func newServer(em *EaselMaker) *Server {
 	return &Server{
+		easelMaker: em,
 		easelMutex: new(sync.Mutex),
+		easelMap:   make(map[string]*EaselEntry),
 	}
 }
 
@@ -91,7 +95,7 @@ func (serv *Server) deleteEasel(name string) bool {
 	e, ok := serv.easelMap[name]
 	if ok {
 		delete(serv.easelMap, name)
-		e.easel.Destroy()
+		serv.easelMaker.RequestDelEasel(e.easel)
 		return true
 	}
 
@@ -99,7 +103,7 @@ func (serv *Server) deleteEasel(name string) bool {
 }
 
 func (serv *Server) makeEasel(name string) *EaselEntry {
-	e := easel.NewEasel()
+	e := <-serv.easelMaker.RequestNewEasel()
 	ent := &EaselEntry{
 		easel:      e,
 		usedAt:     time.Now(),
@@ -177,6 +181,7 @@ func (serv *Server) DeletePalette(ctx context.Context, req *proto.DeletePaletteR
 		return nil, ErrPaletteNotFound
 	}
 	easelEnt.easel.MakeCurrent()
+	defer easelEnt.easel.DetachCurrent()
 	paletteEnt.palette.Destroy()
 	return &proto.DeletePaletteResponse{}, nil
 }
@@ -201,6 +206,7 @@ func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteR
 	e := easelEnt.easel
 	p := paletteEnt.palette
 	e.MakeCurrent()
+	defer e.DetachCurrent()
 
 	/* program */
 	prog, err := e.CompileProgram(req.VertexShader, req.FragmentShader)
@@ -268,6 +274,7 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 	e := easelEnt.easel
 	p := paletteEnt.palette
 	e.MakeCurrent()
+	defer e.DetachCurrent()
 	size := image.Rect(0, 0, int(req.OutWidth), int(req.OutHeight))
 	tex, err := e.LoadTexture2D(req.Input)
 	if err != nil {
