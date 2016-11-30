@@ -38,7 +38,7 @@ func (p *Program) Unuse() {
 
 func (p *Program) attibLocation(name string) (int32, error) {
 	idx := gl.GetAttribLocation(p.progID, gl.Str(name+"\x00"))
-	err := checkGLError("error while get attrib location")
+	err := checkGLError("Error while get attrib location")
 	if idx < 0 {
 		return -1, fmt.Errorf("Attribute not found: %s", name)
 	}
@@ -47,7 +47,7 @@ func (p *Program) attibLocation(name string) (int32, error) {
 
 func (p *Program) uniformLocation(name string) (int32, error) {
 	idx := gl.GetUniformLocation(p.progID, gl.Str(name+"\x00"))
-	err := checkGLError("error while get uniform location")
+	err := checkGLError("Error while get uniform location")
 	if idx < 0 {
 		return -1, fmt.Errorf("Attribute not found: %s", name)
 	}
@@ -67,6 +67,10 @@ func compileProgram(vertex, fragment string) (uint32, error) {
 		return 0, err
 	}
 	prog := gl.CreateProgram()
+	err = checkGLError("Error while creating program")
+	if err != nil {
+		return 0, err
+	}
 	gl.AttachShader(prog, vsh)
 	gl.AttachShader(prog, fsh)
 	gl.LinkProgram(prog)
@@ -80,7 +84,7 @@ func compileProgram(vertex, fragment string) (uint32, error) {
 		log := strings.Repeat("\x00", int(logLength+1))
 		gl.GetProgramInfoLog(prog, logLength, nil, gl.Str(log))
 
-		return 0, fmt.Errorf("failed to link program: %v", log)
+		return 0, fmt.Errorf("Failed to link program: %v", log)
 	}
 
 	gl.DeleteShader(vsh)
@@ -89,12 +93,25 @@ func compileProgram(vertex, fragment string) (uint32, error) {
 }
 
 func compileShader(source string, shaderType uint32) (uint32, error) {
+	var err error
 	shader := gl.CreateShader(shaderType)
+	err = checkGLError("Error while creating shader")
+	if err != nil {
+		return 0, err
+	}
 
 	csources, free := gl.Strs(source + "\x00")
 	gl.ShaderSource(shader, 1, csources, nil)
 	free()
+	err = checkGLError("Error while attaching shader sourcr")
+	if err != nil {
+		return 0, err
+	}
 	gl.CompileShader(shader)
+	err = checkGLError("Error while compiling shader")
+	if err != nil {
+		return 0, err
+	}
 
 	var status int32
 	gl.GetShaderiv(shader, gl.COMPILE_STATUS, &status)
@@ -105,7 +122,9 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 		log := strings.Repeat("\x00", int(logLength+1))
 		gl.GetShaderInfoLog(shader, logLength, nil, gl.Str(log))
 
-		return 0, fmt.Errorf("failed to compile %v: %v", source, log)
+		return 0, fmt.Errorf(`Failed to compile: %v
+** Source **
+%v`, log, source)
 	}
 	return shader, nil
 }

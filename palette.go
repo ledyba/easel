@@ -13,6 +13,7 @@ type Palette struct {
 	easel         *Easel
 	program       *Program
 	vertexArray   *VertexArray
+	indecies      *VertexBuffer
 	frameBufferID uint32
 	textureName   string
 }
@@ -121,11 +122,12 @@ func (p *Palette) AttachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
 	if err != nil {
 		return nil, err
 	}
+	p.indecies = buff
 	return buff, nil
 }
 
 // Render ...
-func (p *Palette) Render(indecies *VertexBuffer, tex *Texture2D, size image.Rectangle) (image.Image, error) {
+func (p *Palette) Render(tex *Texture2D, size image.Rectangle) (image.Image, error) {
 	var err error
 	var texID uint32
 	gl.BindFramebuffer(gl.FRAMEBUFFER, p.frameBufferID)
@@ -174,21 +176,29 @@ func (p *Palette) Render(indecies *VertexBuffer, tex *Texture2D, size image.Rect
 	if err = p.vertexArray.bind(); err != nil {
 		return nil, err
 	}
-	gl.ActiveTexture(gl.TEXTURE0)
-	if err = tex.bind(); err != nil {
-		return nil, err
+
+	if tex == nil && len(p.textureName) > 0 {
+		return nil, fmt.Errorf("No texture for uniform variable: \"%s\"", p.textureName)
+	} else if tex != nil && len(p.textureName) == 0 {
+		return nil, errors.New("This shader does not use textures")
+	} else if tex != nil {
+		gl.ActiveTexture(gl.TEXTURE0)
+		if err = tex.bind(); err != nil {
+			return nil, err
+		}
+		defer tex.unbind()
+		var textureLoc int32
+		textureLoc, err = p.program.uniformLocation(p.textureName)
+		if err != nil {
+			return nil, err
+		}
+		gl.Uniform1i(textureLoc, 0) // We use texture 0
 	}
-	defer tex.unbind()
-	textureLoc, err := p.program.uniformLocation(p.textureName)
-	if err != nil {
-		return nil, err
-	}
-	gl.Uniform1i(int32(textureLoc), 0) // We use texture 0
 
 	p.vertexArray.bind()
 	defer p.vertexArray.unbind()
 
-	gl.DrawElements(gl.TRIANGLES, int32(indecies.length), gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.DrawElements(gl.TRIANGLES, int32(p.indecies.length), gl.UNSIGNED_SHORT, gl.Ptr(nil))
 
 	if err = checkGLError("Error on DrawArrays"); err != nil {
 		return nil, err

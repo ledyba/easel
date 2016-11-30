@@ -143,6 +143,7 @@ func (serv *Server) DeleteEasel(c context.Context, req *proto.DeleteEaselRequest
 
 // NewPalette ...
 func (serv *Server) NewPalette(ctx context.Context, req *proto.NewPaletteRequest) (*proto.NewPaletteResponse, error) {
+	var err error
 	ent := serv.fetchEasel(req.EaselId)
 	if ent == nil {
 		return nil, ErrEaselNotFound
@@ -151,7 +152,12 @@ func (serv *Server) NewPalette(ctx context.Context, req *proto.NewPaletteRequest
 	defer runtime.UnlockOSThread()
 	ent.lock()
 	defer ent.unlock()
-	palette := ent.easel.NewPalette()
+	ent.easel.MakeCurrent()
+	defer ent.easel.DetachCurrent()
+	palette, err := ent.easel.NewPalette()
+	if err != nil {
+		return nil, err
+	}
 	name := RandString(10)
 	ent.paletteMap[name] = &PaletteEntry{
 		palette:       palette,
@@ -197,6 +203,8 @@ func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteR
 	defer runtime.UnlockOSThread()
 	easelEnt.lock()
 	defer easelEnt.unlock()
+	easelEnt.easel.MakeCurrent()
+	defer easelEnt.easel.DetachCurrent()
 	paletteEnt := easelEnt.paletteMap[req.PaletteId]
 	if paletteEnt == nil {
 		return nil, ErrPaletteNotFound
@@ -292,7 +300,7 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 		return nil, err
 	}
 	defer tex.Destroy()
-	img, err := p.Render(paletteEnt.indecies, tex, size)
+	img, err := p.Render(tex, size)
 	if err != nil {
 		return nil, err
 	}

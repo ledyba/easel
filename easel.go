@@ -38,7 +38,11 @@ func NewEasel() *Easel {
 	log.Infof("    ** Extensions **")
 	for i := uint32(0); i < gl.NUM_EXTENSIONS; i++ {
 		str := gl.GetStringi(gl.EXTENSIONS, i)
-		if str != nil {
+		code := gl.GetError()
+		if code == gl.INVALID_VALUE {
+			break
+		}
+		if str != nil && code != gl.NO_ERROR {
 			log.Infof("      - %s", gl.GoStr(str))
 		}
 	}
@@ -65,16 +69,25 @@ func (e *Easel) DetachCurrent() {
 }
 
 // NewPalette ...
-func (e *Easel) NewPalette() *Palette {
-	e.MakeCurrent()
-	defer e.DetachCurrent()
-	p := &Palette{
-		easel:       e,
-		program:     nil,
-		vertexArray: newVertexArray(),
+func (e *Easel) NewPalette() (*Palette, error) {
+	var err error
+	va, err := newVertexArray()
+	if err != nil {
+		return nil, err
 	}
-	gl.GenFramebuffers(1, &p.frameBufferID)
-	return p
+	var fb uint32
+	gl.GenFramebuffers(1, &fb)
+	err = checkGLError("Error while generating framebuffer")
+	if err != nil {
+		return nil, err
+	}
+	p := &Palette{
+		easel:         e,
+		program:       nil,
+		vertexArray:   va,
+		frameBufferID: fb,
+	}
+	return p, nil
 }
 
 // SwapBuffers ...

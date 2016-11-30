@@ -47,7 +47,6 @@ void main() {
 	uv = (vert.xy+vec2(1,1))/2.0;
 	gl_Position = vec4(vert, 1);
 }
-
 `
 const FragmentShader = `
 #version 410
@@ -69,22 +68,30 @@ func init() {
 }
 
 func TestRender(t *testing.T) {
+	var err error
 	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	glfw.Init()
 	defer glfw.Terminate()
 	e := NewEasel()
 	e.MakeCurrent()
 	defer e.DetachCurrent()
 	defer e.Destroy()
-	p := e.NewPalette()
-	p.Bind()
+	p, err := e.NewPalette()
+	if err != nil {
+		t.Fatalf("Could not creating palette: \n** Message **\n%v", err)
+	}
+	err = p.Bind()
+	if err != nil {
+		t.Fatalf("Could not bind palette: \n** Message **\n%v", err)
+	}
 	defer p.Unbind()
 	defer p.Destroy()
 	// DO YOUR TEST
 
 	prog, err := e.CompileProgram(VertexShader, FragmentShader)
 	if err != nil {
-		t.Errorf("Could not compile shader: \n** Message **\n%v", err)
+		t.Fatalf("Could not compile shader: \n** Message **\n%v", err)
 	}
 	p.AttachProgram(prog, "tex")
 	prog.Use()
@@ -94,14 +101,14 @@ func TestRender(t *testing.T) {
 	data, _ := base64.StdEncoding.DecodeString(ICON)
 	tex, err := e.LoadTexture2D(data)
 	if err != nil {
-		t.Errorf("Could not create texure: \n** Message **\n%v", err)
+		t.Fatalf("Could not create texure: \n** Message **\n%v", err)
 	}
 	defer tex.Destroy()
 
 	p.vertexArray.bind()
 	indecies, err := p.AttachArrayIndexBuffer([]uint16{0, 1, 3, 2, 3, 0})
 	if err != nil {
-		t.Errorf("Could not bind array indecies: \n** Message **\n%v", err)
+		t.Fatalf("Could not bind array indecies: \n** Message **\n%v", err)
 	}
 	_, err = p.AttachArrayBuffer([]float32{
 		-1, -1, 0,
@@ -111,11 +118,11 @@ func TestRender(t *testing.T) {
 	})
 
 	if err != nil {
-		t.Errorf("Could not create texure: \n** Message **\n%v", err)
+		t.Fatalf("Could not create texure: \n** Message **\n%v", err)
 	}
 	err = p.BindArrayAttrib(indecies, "vert", 3, 0, 0)
 	if err != nil {
-		t.Errorf("Could not bind array attrib: \n** Message **\n%v", err)
+		t.Fatalf("Could not bind array attrib: \n** Message **\n%v", err)
 	}
 
 	offset := make([]float32, 441*2)
@@ -146,7 +153,7 @@ func TestRender(t *testing.T) {
 		}
 	}
 	if sumk != 1.0 {
-		t.Errorf("sumk should be 1, but %f", sumk)
+		t.Fatalf("sumk should be 1, but %f", sumk)
 	}
 
 	err = p.BindUniformf("offset", 2, offset)
@@ -158,9 +165,9 @@ func TestRender(t *testing.T) {
 		t.Error(err)
 	}
 
-	img, err := p.Render(indecies, tex, image.Rect(0, 0, 256, 256))
+	img, err := p.Render(tex, image.Rect(0, 0, 256, 256))
 	if err != nil {
-		t.Errorf("Could not execute: \n** Message **\n%v", err)
+		t.Fatalf("Could not execute: \n** Message **\n%v", err)
 	}
 	file, err := os.Create("test.png")
 	if err != nil {
