@@ -209,45 +209,56 @@ func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteR
 	defer e.DetachCurrent()
 
 	/* program */
-	prog, err := e.CompileProgram(req.VertexShader, req.FragmentShader)
-	if err != nil {
-		return nil, err
-	}
-	if p.Program() != nil {
-		p.Program().Destroy()
-	}
-	p.AttachProgram(prog, req.TextureName)
-
-	/* ArrayBuffer */
-	var vb *easel.VertexBuffer
-	for _, buf := range req.Buffers {
-		vb, err = p.AttachArrayBuffer(buf.Data)
+	if len(req.VertexShader) > 0 && len(req.FragmentShader) > 0 {
+		var prog *easel.Program
+		prog, err = e.CompileProgram(req.VertexShader, req.FragmentShader)
 		if err != nil {
 			return nil, err
 		}
-		paletteEnt.vertexBuffers[buf.Name] = vb
+		if p.Program() != nil {
+			p.Program().Destroy()
+		}
+		p.AttachProgram(prog, req.TextureName)
+	}
+
+	/* ArrayBuffer */
+	if req.Buffers != nil {
+		var vb *easel.VertexBuffer
+		for _, buf := range req.Buffers {
+			vb, err = p.AttachArrayBuffer(buf.Data)
+			if err != nil {
+				return nil, err
+			}
+			paletteEnt.vertexBuffers[buf.Name] = vb
+		}
 	}
 
 	/* ArrayIndexBuffer */
-	indecies := make([]uint16, len(req.Indecies))
-	for i, v := range req.Indecies {
-		indecies[i] = uint16(v)
-	}
-	vb, err = p.AttachArrayIndexBuffer(indecies)
-	if err != nil {
-		return nil, err
-	}
-	paletteEnt.indecies = vb
-
-	// Binding VertexAttrib
-	for _, attrib := range req.VertexArrtibutes {
-		vb = paletteEnt.vertexBuffers[attrib.BufferName]
-		if vb == nil {
-			return nil, ErrVertexBufferNotFound
+	if req.Indecies != nil {
+		var vb *easel.VertexBuffer
+		indecies := make([]uint16, len(req.Indecies))
+		for i, v := range req.Indecies {
+			indecies[i] = uint16(v)
 		}
-		err = p.BindArrayAttrib(vb, attrib.ArgumentName, attrib.ElementSize, attrib.Stride, attrib.Offset)
+		vb, err = p.AttachArrayIndexBuffer(indecies)
 		if err != nil {
 			return nil, err
+		}
+		paletteEnt.indecies = vb
+	}
+
+	// Binding VertexAttrib
+	if req.VertexArrtibutes != nil {
+		var vb *easel.VertexBuffer
+		for _, attrib := range req.VertexArrtibutes {
+			vb = paletteEnt.vertexBuffers[attrib.BufferName]
+			if vb == nil {
+				return nil, ErrVertexBufferNotFound
+			}
+			err = p.BindArrayAttrib(vb, attrib.ArgumentName, attrib.ElementSize, attrib.Stride, attrib.Offset)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

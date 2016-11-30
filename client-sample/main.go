@@ -42,12 +42,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Palette Created: %s", presp.PaletteId)
+	log.Printf("Palette Created: (%s > %s)", presp.EaselId, presp.PaletteId)
 	defer func() {
 		serv.DeletePalette(context.Background(), &proto.DeletePaletteRequest{
 			EaselId:   eresp.EaselId,
 			PaletteId: presp.PaletteId,
 		})
-		log.Printf("Palette Deleted: %s", presp.PaletteId)
+		log.Printf("Palette Deleted: (%s > %s)", presp.EaselId, presp.PaletteId)
 	}()
+
+	_, err = serv.UpdatePalette(context.Background(), &proto.UpdatePaletteRequest{
+		EaselId:   presp.EaselId,
+		PaletteId: presp.PaletteId,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Palette Updated: (%s > %s)", presp.EaselId, presp.PaletteId)
 }
