@@ -2,4 +2,6 @@
 
 ## Aims & Background
 
-In our datacenter, computation server equipped with GPU and web servers are separated.
+In our datacenter, there are two kinds of machines. Machines with GPU, and those without GPU.
+
+This program will be used to let machines w/o GPU to utilize GPU-powered machines.
