@@ -42,7 +42,7 @@ func NewEasel() *Easel {
 		if code == gl.INVALID_VALUE {
 			break
 		}
-		if str != nil && code != gl.NO_ERROR {
+		if str != nil {
 			log.Infof("      - %s", gl.GoStr(str))
 		}
 	}
