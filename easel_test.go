@@ -167,7 +167,7 @@ func TestRender(t *testing.T) {
 
 	p.BindTexture("tex", tex)
 
-	img, err := p.Render(image.Rect(0, 0, 256, 256))
+	img, err := p.Render(image.Rect(0, 0, 32, 32))
 	if err != nil {
 		t.Fatalf("Could not execute: \n** Message **\n%v", err)
 	}

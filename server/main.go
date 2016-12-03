@@ -28,7 +28,9 @@ var port = flag.Int("port", 3000, "port to listen")
 func startServer(lis net.Listener, em *EaselMaker) {
 	log.Infof("Now listen at :%d", *port)
 	server := grpc.NewServer()
-	proto.RegisterEaselServiceServer(server, newServer(em))
+	impl := newServer(em)
+	go impl.startGC()
+	proto.RegisterEaselServiceServer(server, impl)
 	server.Serve(lis)
 }
 

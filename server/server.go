@@ -29,6 +29,11 @@ var (
 	ErrVertexBufferNotFound = errors.New("VertexBuffer not found")
 )
 
+const (
+	// ExpiredDuration ...
+	ExpiredDuration = time.Minute * 30
+)
+
 // Server ...
 type Server struct {
 	easelMaker *EaselMaker
@@ -78,9 +83,33 @@ func newServer(em *EaselMaker) *Server {
 	}
 }
 
+func (serv *Server) startGC() {
+	t := time.NewTicker(ExpiredDuration)
+	log.Info("Start Easel GC")
+	for {
+		select {
+		case <-t.C:
+			log.Info("Invok Easel GC")
+			serv.gc()
+		}
+	}
+}
+
 func (serv *Server) gc() {
 	serv.easelMutex.Lock()
 	defer serv.easelMutex.Unlock()
+
+	now := time.Now()
+	for key, e := range serv.easelMap {
+		e.lock()
+		defer e.unlock()
+		if now.Sub(e.usedAt) >= ExpiredDuration {
+			e.easel.Destroy()
+			serv.deleteEasel(key)
+			log.Warnf("Easel (%s) garbage collected.", key)
+			continue
+		}
+	}
 }
 
 func (serv *Server) fetchEasel(name string) *EaselEntry {
