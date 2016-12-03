@@ -61,28 +61,51 @@ message VertexAttribute {
   int32 offset = 4;
   int32 stride = 5;
 }
-message UniformAttribute {
+
+message UniformFloatValue {
+  int32 element_size = 1;
+  repeated float data = 2;
+}
+
+message UniformIntValue {
+  int32 element_size = 1;
+  repeated int32 data = 2;
+}
+
+message UniformTexture {
+  bytes data = 1;
+}
+
+message UniformVariable {
+  string name = 1;
+  UniformFloatValue float_value = 2;
+  UniformIntValue int_value = 3;
+  UniformTexture texture = 4;
 }
 
 message ArrayBuffer {
   string name = 1;
   repeated float data = 2;
 }
+
+message PaletteStates {
+  // Shader
+  string vertex_shader = 1;
+  string fragment_shader = 2;
+  // VertexBuffer
+  repeated ArrayBuffer buffers = 3;
+  // VertexElementBuffer
+  repeated int32 indecies = 4;
+  // VertexAttributes
+  repeated VertexAttribute vertex_arrtibutes = 5;
+  // UniformVariables
+  repeated UniformVariable uniform_variables = 6;
+}
+
 message UpdatePaletteRequest {
   string easel_id = 1;
   string palette_id = 2;
-  // Shader
-  string vertex_shader = 3;
-  string fragment_shader = 4;
-  string texture_name = 5;
-  // VertexBuffer
-  repeated ArrayBuffer buffers = 6;
-  // VertexElementBuffer
-  repeated int32 indecies = 7;
-  // VertexAttributes
-  repeated VertexAttribute vertex_arrtibutes = 8;
-  // UniformAttributes
-  repeated UniformAttribute uniform_arrtibute = 9;
+  PaletteStates states = 3;
 }
 
 message UpdatePaletteResponse {
@@ -92,7 +115,7 @@ message UpdatePaletteResponse {
 message RenderRequest {
   string easel_id = 1;
   string palette_id = 2;
-  bytes input = 3;
+  PaletteStates states = 3;
   float out_quality = 4;
   string out_format = 5;
   int32 out_width = 6;

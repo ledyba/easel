@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/go-gl/gl/v4.1-core/gl"
 )
 
@@ -15,7 +16,10 @@ type Palette struct {
 	vertexArray   *VertexArray
 	indecies      *VertexBuffer
 	frameBufferID uint32
-	textureName   string
+	textureUnits  [gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS - 1]struct {
+		name string
+		tex  *Texture2D
+	}
 }
 
 // Bind ...
@@ -40,9 +44,8 @@ func (p *Palette) Destroy() {
 }
 
 // AttachProgram ...
-func (p *Palette) AttachProgram(prog *Program, textureName string) {
+func (p *Palette) AttachProgram(prog *Program) {
 	p.program = prog
-	p.textureName = textureName
 }
 
 // Program ...
@@ -57,7 +60,7 @@ func (p *Palette) BindArrayAttrib(vb *VertexBuffer, name string, size, stride, o
 	if err != nil {
 		return err
 	}
-	err = vb.bind()
+	err = vb.Bind()
 	if err != nil {
 		return err
 	}
@@ -95,14 +98,74 @@ func (p *Palette) BindUniformf(name string, vecDim int, data []float32) error {
 	}
 }
 
-// AttachArrayBuffer ...
-func (p *Palette) AttachArrayBuffer(data []float32) (*VertexBuffer, error) {
+// BindUniformi ...
+func (p *Palette) BindUniformi(name string, vecDim int, data []int32) error {
 	var err error
-	buff := newVertexArrayBuffer()
-	err = buff.bind()
+	loc, err := p.program.uniformLocation(name)
+	if err != nil {
+		return err
+	}
+	switch vecDim {
+	case 1:
+		gl.Uniform1iv(loc, int32(len(data)), &data[0])
+		return checkGLError("Error on glUniform1fv")
+	case 2:
+		gl.Uniform2iv(loc, int32(len(data)/2), &data[0])
+		return checkGLError("Error on glUniform2fv")
+	case 3:
+		gl.Uniform3iv(loc, int32(len(data)/3), &data[0])
+		return checkGLError("Error on glUniform3fv")
+	case 4:
+		gl.Uniform4iv(loc, int32(len(data)/4), &data[0])
+		return checkGLError("Error on glUniform4fv")
+	default:
+		return fmt.Errorf("Unsupported vector dimension: %d", vecDim)
+	}
+}
+
+// BindTexture ...
+func (p *Palette) BindTexture(name string, tex *Texture2D) (*Texture2D, error) {
+	var err error
+	idx := 0
+	for i, unit := range p.textureUnits {
+		idx = i
+		if unit.name == name || len(unit.name) == 0 {
+			break
+		}
+	}
+	if idx >= len(p.textureUnits) {
+		return nil, fmt.Errorf("Texture units limit succeeded: %d", len(p.textureUnits))
+	}
+	log.Debugf("%s assigned to TextureUnit %d", name, idx+1)
+	gl.ActiveTexture(gl.TEXTURE1 + uint32(idx))
+	if err = checkGLError(fmt.Sprintf("Error while activate texture unit %d", idx+1)); err != nil {
+		return nil, err
+	}
+	err = tex.bind()
 	if err != nil {
 		return nil, err
 	}
+	old := p.textureUnits[idx].tex
+	p.textureUnits[idx].name = name
+	p.textureUnits[idx].tex = tex
+
+	loc, err := p.program.uniformLocation(name)
+	if err != nil {
+		return old, err
+	}
+	gl.Uniform1i(loc, int32(idx+1))
+	return old, nil
+}
+
+// MakeArrayBuffer ...
+func (p *Palette) MakeArrayBuffer(data []float32) (*VertexBuffer, error) {
+	var err error
+	buff := newVertexArrayBuffer()
+	err = buff.Bind()
+	if err != nil {
+		return nil, err
+	}
+	defer buff.Unbind()
 	err = buff.loadDataf(data)
 	if err != nil {
 		return nil, err
@@ -114,7 +177,7 @@ func (p *Palette) AttachArrayBuffer(data []float32) (*VertexBuffer, error) {
 func (p *Palette) AttachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
 	var err error
 	buff := newVertexIndexArrayBuffer()
-	err = buff.bind()
+	err = buff.Bind()
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +190,7 @@ func (p *Palette) AttachArrayIndexBuffer(data []uint16) (*VertexBuffer, error) {
 }
 
 // Render ...
-func (p *Palette) Render(tex *Texture2D, size image.Rectangle) (image.Image, error) {
+func (p *Palette) Render(size image.Rectangle) (image.Image, error) {
 	var err error
 	var texID uint32
 	gl.BindFramebuffer(gl.FRAMEBUFFER, p.frameBufferID)
@@ -140,12 +203,16 @@ func (p *Palette) Render(tex *Texture2D, size image.Rectangle) (image.Image, err
 		return nil, err
 	}
 	/* Setup Texture for FrameBuffer */
+	gl.ActiveTexture(gl.TEXTURE0)
+	if err = checkGLError("Error while activate texture unit 0"); err != nil {
+		return nil, err
+	}
 	gl.GenTextures(1, &texID)
 	if err = checkGLError("Error while generating framebuffer texture"); err != nil {
 		return nil, err
 	}
 	gl.BindTexture(gl.TEXTURE_2D, texID)
-	if err = checkGLError("Error while binding framebuffer texture"); err != nil {
+	if err = checkGLError(fmt.Sprintf("Error on binding framebuffer texture (%d)", texID)); err != nil {
 		return nil, err
 	}
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(size.Dx()), int32(size.Dy()), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(nil))
@@ -177,24 +244,6 @@ func (p *Palette) Render(tex *Texture2D, size image.Rectangle) (image.Image, err
 		return nil, err
 	}
 
-	if tex == nil && len(p.textureName) > 0 {
-		return nil, fmt.Errorf("No texture for uniform variable: \"%s\"", p.textureName)
-	} else if tex != nil && len(p.textureName) == 0 {
-		return nil, errors.New("This shader does not use textures")
-	} else if tex != nil {
-		gl.ActiveTexture(gl.TEXTURE0)
-		if err = tex.bind(); err != nil {
-			return nil, err
-		}
-		defer tex.unbind()
-		var textureLoc int32
-		textureLoc, err = p.program.uniformLocation(p.textureName)
-		if err != nil {
-			return nil, err
-		}
-		gl.Uniform1i(textureLoc, 0) // We use texture 0
-	}
-
 	p.vertexArray.bind()
 	defer p.vertexArray.unbind()
 
@@ -206,8 +255,9 @@ func (p *Palette) Render(tex *Texture2D, size image.Rectangle) (image.Image, err
 	//e.easel.SwapBuffers()
 
 	/* Readback the output */
+	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, texID)
-	if err = checkGLError("Error on bind framebuffer texture"); err != nil {
+	if err = checkGLError(fmt.Sprintf("Error on binding framebuffer texture (%d)", texID)); err != nil {
 		return nil, err
 	}
 	out := image.NewRGBA(size)

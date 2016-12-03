@@ -28,12 +28,14 @@ func (vb *VertexBuffer) Destroy() {
 	gl.DeleteBuffers(1, &vb.id)
 }
 
-func (vb *VertexBuffer) bind() error {
+// Bind ...
+func (vb *VertexBuffer) Bind() error {
 	gl.BindBuffer(vb.target, vb.id)
 	return checkGLError("Error while binding vertex buffer")
 }
 
-func (vb *VertexBuffer) unbind() {
+// Unbind ...
+func (vb *VertexBuffer) Unbind() {
 	gl.BindBuffer(vb.target, 0)
 }
 

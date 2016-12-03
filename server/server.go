@@ -192,6 +192,101 @@ func (serv *Server) DeletePalette(ctx context.Context, req *proto.DeletePaletteR
 	return &proto.DeletePaletteResponse{}, nil
 }
 
+func (serv *Server) updatePalette(e *easel.Easel, paletteEnt *PaletteEntry, req *proto.PaletteStates) error {
+	var err error
+	p := paletteEnt.palette
+	err = p.Bind()
+	if err != nil {
+		return err
+	}
+	defer p.Unbind()
+	/* program */
+	if len(req.VertexShader) > 0 && len(req.FragmentShader) > 0 {
+		var prog *easel.Program
+		prog, err = e.CompileProgram(req.VertexShader, req.FragmentShader)
+		if err != nil {
+			return err
+		}
+		if p.Program() != nil {
+			p.Program().Destroy()
+		}
+		p.AttachProgram(prog)
+	}
+
+	/* ArrayBuffer */
+	if req.Buffers != nil {
+		var vb *easel.VertexBuffer
+		for _, buf := range req.Buffers {
+			if old, ok := paletteEnt.vertexBuffers[buf.Name]; ok {
+				old.Destroy()
+			}
+			if buf.Data == nil || len(buf.Data) <= 0 {
+				delete(paletteEnt.vertexBuffers, buf.Name)
+				continue
+			}
+			vb, err = p.MakeArrayBuffer(buf.Data)
+			if err != nil {
+				return err
+			}
+			paletteEnt.vertexBuffers[buf.Name] = vb
+		}
+	}
+
+	/* ArrayIndexBuffer */
+	if req.Indecies != nil {
+		var vb *easel.VertexBuffer
+		indecies := make([]uint16, len(req.Indecies))
+		for i, v := range req.Indecies {
+			indecies[i] = uint16(v)
+		}
+		vb, err = p.AttachArrayIndexBuffer(indecies)
+		if err != nil {
+			return err
+		}
+		paletteEnt.indecies = vb
+	}
+
+	// Binding VertexAttrib
+	if req.VertexArrtibutes != nil {
+		var vb *easel.VertexBuffer
+		for _, attrib := range req.VertexArrtibutes {
+			vb = paletteEnt.vertexBuffers[attrib.BufferName]
+			if vb == nil {
+				return ErrVertexBufferNotFound
+			}
+			err = p.BindArrayAttrib(vb, attrib.ArgumentName, attrib.ElementSize, attrib.Stride, attrib.Offset)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Binding Uniforms
+	var tex *easel.Texture2D
+	if req.UniformVariables != nil {
+		for _, uni := range req.UniformVariables {
+			if uni.Texture != nil {
+				tex, err = e.LoadTexture2D(uni.Texture.Data)
+				if err != nil {
+					return err
+				}
+				p.BindTexture(uni.Name, tex)
+			} else if uni.FloatValue != nil {
+				err = p.BindUniformf(uni.Name, int(uni.FloatValue.ElementSize), uni.FloatValue.Data)
+				if err != nil {
+					return err
+				}
+			} else if uni.IntValue != nil {
+				err = p.BindUniformi(uni.Name, int(uni.IntValue.ElementSize), uni.IntValue.Data)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // UpdatePalette ...
 func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteRequest) (*proto.UpdatePaletteResponse, error) {
 	var err error
@@ -212,64 +307,12 @@ func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteR
 	paletteEnt.lock()
 	defer paletteEnt.unlock()
 	e := easelEnt.easel
-	p := paletteEnt.palette
-	e.MakeCurrent()
-	defer e.DetachCurrent()
-
-	/* program */
-	if len(req.VertexShader) > 0 && len(req.FragmentShader) > 0 {
-		var prog *easel.Program
-		prog, err = e.CompileProgram(req.VertexShader, req.FragmentShader)
+	if req.States != nil {
+		err = serv.updatePalette(e, paletteEnt, req.States)
 		if err != nil {
-			return nil, err
-		}
-		if p.Program() != nil {
-			p.Program().Destroy()
-		}
-		p.AttachProgram(prog, req.TextureName)
-	}
-
-	/* ArrayBuffer */
-	if req.Buffers != nil {
-		var vb *easel.VertexBuffer
-		for _, buf := range req.Buffers {
-			vb, err = p.AttachArrayBuffer(buf.Data)
-			if err != nil {
-				return nil, err
-			}
-			paletteEnt.vertexBuffers[buf.Name] = vb
+			return nil, ErrPaletteNotFound
 		}
 	}
-
-	/* ArrayIndexBuffer */
-	if req.Indecies != nil {
-		var vb *easel.VertexBuffer
-		indecies := make([]uint16, len(req.Indecies))
-		for i, v := range req.Indecies {
-			indecies[i] = uint16(v)
-		}
-		vb, err = p.AttachArrayIndexBuffer(indecies)
-		if err != nil {
-			return nil, err
-		}
-		paletteEnt.indecies = vb
-	}
-
-	// Binding VertexAttrib
-	if req.VertexArrtibutes != nil {
-		var vb *easel.VertexBuffer
-		for _, attrib := range req.VertexArrtibutes {
-			vb = paletteEnt.vertexBuffers[attrib.BufferName]
-			if vb == nil {
-				return nil, ErrVertexBufferNotFound
-			}
-			err = p.BindArrayAttrib(vb, attrib.ArgumentName, attrib.ElementSize, attrib.Stride, attrib.Offset)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
 	return &proto.UpdatePaletteResponse{}, nil
 }
 
@@ -294,13 +337,11 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 	p := paletteEnt.palette
 	e.MakeCurrent()
 	defer e.DetachCurrent()
-	size := image.Rect(0, 0, int(req.OutWidth), int(req.OutHeight))
-	tex, err := e.LoadTexture2D(req.Input)
-	if err != nil {
+	if err = serv.updatePalette(e, paletteEnt, req.States); err != nil {
 		return nil, err
 	}
-	defer tex.Destroy()
-	img, err := p.Render(tex, size)
+	size := image.Rect(0, 0, int(req.OutWidth), int(req.OutHeight))
+	img, err := p.Render(size)
 	if err != nil {
 		return nil, err
 	}

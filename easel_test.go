@@ -93,7 +93,7 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not compile shader: \n** Message **\n%v", err)
 	}
-	p.AttachProgram(prog, "tex")
+	p.AttachProgram(prog)
 	prog.Use()
 	defer prog.Unuse()
 	defer prog.Destroy()
@@ -110,7 +110,7 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not bind array indecies: \n** Message **\n%v", err)
 	}
-	_, err = p.AttachArrayBuffer([]float32{
+	buf, err := p.MakeArrayBuffer([]float32{
 		-1, -1, 0,
 		1, -1, 0,
 		-1, 1, 0,
@@ -120,6 +120,8 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not create texure: \n** Message **\n%v", err)
 	}
+	buf.Bind()
+	defer buf.Unbind()
 	err = p.BindArrayAttrib(indecies, "vert", 3, 0, 0)
 	if err != nil {
 		t.Fatalf("Could not bind array attrib: \n** Message **\n%v", err)
@@ -165,7 +167,9 @@ func TestRender(t *testing.T) {
 		t.Error(err)
 	}
 
-	img, err := p.Render(tex, image.Rect(0, 0, 256, 256))
+	p.BindTexture("tex", tex)
+
+	img, err := p.Render(image.Rect(0, 0, 256, 256))
 	if err != nil {
 		t.Fatalf("Could not execute: \n** Message **\n%v", err)
 	}

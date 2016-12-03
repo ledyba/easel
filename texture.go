@@ -27,7 +27,7 @@ func newTexture2D(data []byte) (*Texture2D, error) {
 
 func (tex *Texture2D) bind() error {
 	gl.BindTexture(gl.TEXTURE_2D, tex.texID)
-	return checkGLError("Erro while binding texture")
+	return checkGLError("Error on binding texture")
 }
 
 func (tex *Texture2D) unbind() {
@@ -70,5 +70,5 @@ func loadTexture(reader io.Reader) (uint32, error) {
 		gl.UNSIGNED_BYTE,
 		gl.Ptr(rgba.Pix))
 
-	return texture, checkGLError("Error while loading image")
+	return texture, checkGLError("Error on loading image")
 }
