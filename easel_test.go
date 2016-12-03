@@ -120,9 +120,7 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not create texure: \n** Message **\n%v", err)
 	}
-	buf.Bind()
-	defer buf.Unbind()
-	err = p.BindArrayAttrib(indecies, "vert", 3, 0, 0)
+	err = p.BindArrayAttrib(buf, indecies, "vert", 3, 0, 0)
 	if err != nil {
 		t.Fatalf("Could not bind array attrib: \n** Message **\n%v", err)
 	}

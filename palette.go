@@ -54,13 +54,17 @@ func (p *Palette) Program() *Program {
 }
 
 // BindArrayAttrib ...
-func (p *Palette) BindArrayAttrib(vb *VertexBuffer, name string, size, stride, offset int32) error {
+func (p *Palette) BindArrayAttrib(vertexbuffer *VertexBuffer, indecies *VertexBuffer, name string, size, stride, offset int32) error {
 	var err error
 	idx, err := p.program.attibLocation(name)
 	if err != nil {
 		return err
 	}
-	err = vb.Bind()
+	err = vertexbuffer.Bind()
+	if err != nil {
+		return err
+	}
+	err = indecies.Bind()
 	if err != nil {
 		return err
 	}
@@ -243,8 +247,6 @@ func (p *Palette) Render(size image.Rectangle) (image.Image, error) {
 	if err = p.vertexArray.bind(); err != nil {
 		return nil, err
 	}
-
-	p.vertexArray.bind()
 	defer p.vertexArray.unbind()
 
 	gl.DrawElements(gl.TRIANGLES, int32(p.indecies.length), gl.UNSIGNED_SHORT, gl.Ptr(nil))
@@ -256,6 +258,9 @@ func (p *Palette) Render(size image.Rectangle) (image.Image, error) {
 
 	/* Readback the output */
 	gl.ActiveTexture(gl.TEXTURE0)
+	if err = checkGLError("Error while activate texture unit 0"); err != nil {
+		return nil, err
+	}
 	gl.BindTexture(gl.TEXTURE_2D, texID)
 	if err = checkGLError(fmt.Sprintf("Error on binding framebuffer texture (%d)", texID)); err != nil {
 		return nil, err

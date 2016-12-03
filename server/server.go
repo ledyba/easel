@@ -16,6 +16,7 @@ import (
 	"github.com/ledyba/easel"
 	"github.com/ledyba/easel/proto"
 
+	log "github.com/Sirupsen/logrus"
 	context "golang.org/x/net/context"
 )
 
@@ -192,7 +193,7 @@ func (serv *Server) DeletePalette(ctx context.Context, req *proto.DeletePaletteR
 	return &proto.DeletePaletteResponse{}, nil
 }
 
-func (serv *Server) updatePalette(e *easel.Easel, paletteEnt *PaletteEntry, req *proto.PaletteStates) error {
+func (serv *Server) updatePalette(e *easel.Easel, paletteEnt *PaletteEntry, req *proto.PaletteUpdate) error {
 	var err error
 	p := paletteEnt.palette
 	err = p.Bind()
@@ -212,6 +213,11 @@ func (serv *Server) updatePalette(e *easel.Easel, paletteEnt *PaletteEntry, req 
 		}
 		p.AttachProgram(prog)
 	}
+	err = p.Program().Use()
+	if err != nil {
+		return err
+	}
+	defer p.Program().Unuse()
 
 	/* ArrayBuffer */
 	if req.Buffers != nil {
@@ -254,7 +260,7 @@ func (serv *Server) updatePalette(e *easel.Easel, paletteEnt *PaletteEntry, req 
 			if vb == nil {
 				return ErrVertexBufferNotFound
 			}
-			err = p.BindArrayAttrib(vb, attrib.ArgumentName, attrib.ElementSize, attrib.Stride, attrib.Offset)
+			err = p.BindArrayAttrib(vb, paletteEnt.indecies, attrib.ArgumentName, attrib.ElementSize, attrib.Stride, attrib.Offset)
 			if err != nil {
 				return err
 			}
@@ -263,14 +269,21 @@ func (serv *Server) updatePalette(e *easel.Easel, paletteEnt *PaletteEntry, req 
 
 	// Binding Uniforms
 	var tex *easel.Texture2D
+	var old *easel.Texture2D
 	if req.UniformVariables != nil {
 		for _, uni := range req.UniformVariables {
 			if uni.Texture != nil {
-				tex, err = e.LoadTexture2D(uni.Texture.Data)
+				tex, err = e.LoadTexture2D(uni.Texture)
 				if err != nil {
 					return err
 				}
-				p.BindTexture(uni.Name, tex)
+				old, err = p.BindTexture(uni.Name, tex)
+				if err != nil {
+					return err
+				}
+				if old != nil {
+					old.Destroy()
+				}
 			} else if uni.FloatValue != nil {
 				err = p.BindUniformf(uni.Name, int(uni.FloatValue.ElementSize), uni.FloatValue.Data)
 				if err != nil {
@@ -307,10 +320,10 @@ func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteR
 	paletteEnt.lock()
 	defer paletteEnt.unlock()
 	e := easelEnt.easel
-	if req.States != nil {
-		err = serv.updatePalette(e, paletteEnt, req.States)
+	if req.Updates != nil {
+		err = serv.updatePalette(e, paletteEnt, req.Updates)
 		if err != nil {
-			return nil, ErrPaletteNotFound
+			return nil, err
 		}
 	}
 	return &proto.UpdatePaletteResponse{}, nil
@@ -318,6 +331,7 @@ func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteR
 
 // Render ...
 func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*proto.RenderResponse, error) {
+	now := time.Now()
 	var err error
 	easelEnt := serv.fetchEasel(req.EaselId)
 	if easelEnt == nil {
@@ -337,15 +351,16 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 	p := paletteEnt.palette
 	e.MakeCurrent()
 	defer e.DetachCurrent()
-	if err = serv.updatePalette(e, paletteEnt, req.States); err != nil {
-		return nil, err
+	if req.Updates != nil {
+		if err = serv.updatePalette(e, paletteEnt, req.Updates); err != nil {
+			return nil, err
+		}
 	}
 	size := image.Rect(0, 0, int(req.OutWidth), int(req.OutHeight))
 	img, err := p.Render(size)
 	if err != nil {
 		return nil, err
 	}
-	resp := &proto.RenderResponse{}
 	var bytes bytes.Buffer
 	writer := bufio.NewWriter(&bytes)
 	switch req.OutFormat {
@@ -374,6 +389,12 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 	if err != nil {
 		return nil, err
 	}
+	resp := &proto.RenderResponse{}
 	resp.Output = bytes.Bytes()
+	log.Infof("Rendered %dx%d %s (%d bytes) image, %fms elapsed.",
+		img.Bounds().Dx(),
+		img.Bounds().Dy(),
+		req.OutFormat,
+		bytes.Len(), (time.Now().Sub(now)).Seconds()*1000)
 	return resp, nil
 }
