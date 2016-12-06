@@ -1,6 +1,8 @@
 package easel
 
 import (
+	"image"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -105,6 +107,11 @@ func (e *Easel) CompileProgram(vertex, fragment string) (*Program, error) {
 }
 
 // LoadTexture2D ...
-func (e *Easel) LoadTexture2D(data []byte) (*Texture2D, error) {
-	return newTexture2D(data)
+func (e *Easel) LoadTexture2D(data []byte) (*Texture2D, image.Image, error) {
+	return newTexture2DFromBytes(data)
+}
+
+// CreateTexture2D ...
+func (e *Easel) CreateTexture2D(img image.Image) (*Texture2D, error) {
+	return newTexture2DFromImage(img)
 }

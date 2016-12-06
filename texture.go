@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
-	"io"
 
 	"github.com/go-gl/gl/v4.1-core/gl"
 )
@@ -15,8 +14,22 @@ type Texture2D struct {
 	texID uint32
 }
 
-func newTexture2D(data []byte) (*Texture2D, error) {
-	texID, err := loadTexture(bytes.NewReader(data))
+func newTexture2DFromBytes(data []byte) (*Texture2D, image.Image, error) {
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		return nil, nil, err
+	}
+	texID, err := loadTexture(img)
+	if err != nil {
+		return nil, img, err
+	}
+	return &Texture2D{
+		texID: texID,
+	}, img, nil
+}
+
+func newTexture2DFromImage(img image.Image) (*Texture2D, error) {
+	texID, err := loadTexture(img)
 	if err != nil {
 		return nil, err
 	}
@@ -39,12 +52,7 @@ func (tex *Texture2D) Destroy() {
 	gl.DeleteTextures(1, &tex.texID)
 }
 
-func loadTexture(reader io.Reader) (uint32, error) {
-	img, _, err := image.Decode(reader)
-	if err != nil {
-		return 0, err
-	}
-
+func loadTexture(img image.Image) (uint32, error) {
 	rgba := image.NewRGBA(img.Bounds())
 	if rgba.Stride != rgba.Rect.Size().X*4 {
 		return 0, fmt.Errorf("unsupported stride")
