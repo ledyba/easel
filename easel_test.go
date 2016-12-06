@@ -56,12 +56,12 @@ void main() {
   for(int dx = -(lobe-1); dx <= lobe; dx++) {
     for(int dy = -(lobe-1); dy <= lobe; dy++) {
       pt = base + vec2(dx,dy);
-      c = dvec4(texture(tex, pt));
-      w * L(srcPt.x - pt.x) * L(srcPt.y - pt.y);
+      c = dvec4(texture(tex, pt / srcSize));
+      w = L(srcPt.x - pt.x) * L(srcPt.y - pt.y);
       sum += c * w;
     }
   }
-	color = vec4(sum);
+	color = vec4(min(dvec4(1,1,1,1), max(sum, dvec4(0,0,0,0))));
 }
 
 `
@@ -101,7 +101,7 @@ func TestRender(t *testing.T) {
 	defer prog.Destroy()
 
 	/**** Render Image ****/
-	freader, err := os.Open("test3.png")
+	freader, err := os.Open("test.png")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -142,11 +142,11 @@ func TestRender(t *testing.T) {
 
 	p.BindTexture("tex", tex)
 
-	img, err := p.Render(image.Rect(0, 0, 32, 32))
+	img, err := p.Render(image.Rect(0, 0, 256, 256))
 	if err != nil {
 		t.Fatalf("Could not execute: \n** Message **\n%v", err)
 	}
-	file, err := os.Create("test.png")
+	file, err := os.Create("test.out.png")
 	if err != nil {
 		t.Error(err)
 	}
