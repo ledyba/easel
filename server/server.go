@@ -302,7 +302,7 @@ func (serv *Server) updatePalette(e *easel.Easel, paletteEnt *PaletteEntry, req 
 	if req.UniformVariables != nil {
 		for _, uni := range req.UniformVariables {
 			if uni.Texture != nil {
-				tex, err = e.LoadTexture2D(uni.Texture)
+				tex, _, err = e.LoadTexture2D(uni.Texture)
 				if err != nil {
 					return err
 				}

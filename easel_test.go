@@ -59,6 +59,7 @@ void main() {
   vec2 start = floor(base - support + 0.5);
   ivec2 contributes = ivec2(support * 2);
 
+	double alpha;
   for(int dx = 0; dx < contributes.x; dx++) {
     for(int dy = 0; dy < contributes.y; dy++) {
       pt = start + vec2(dx, dy);
