@@ -1,15 +1,17 @@
-package main
+package filters
 
 import (
-	"bytes"
 	"image"
-	"io/ioutil"
-	"os"
 
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/ledyba/easel/proto"
 	"golang.org/x/net/context"
+)
+
+const (
+	// LanczosFilter ...
+	LanczosFilter = "lanczos"
 )
 
 // UpdateLanczos ...
@@ -121,43 +123,27 @@ func UpdateLanczos(serv proto.EaselServiceClient, easelID, paletteID string, lob
 }
 
 // RenderLanczos ...
-func RenderLanczos(serv proto.EaselServiceClient, easelID, paletteID string, fname string, scale float64) ([]byte, error) {
-	freader, err := os.Open(fname)
-	if err != nil {
-		return nil, err
-	}
-	defer freader.Close()
-	buff, err := ioutil.ReadAll(freader)
-	if err != nil {
-		return nil, err
-	}
-	reader := bytes.NewReader(buff)
-	src, _, err := image.Decode(reader)
-	if err != nil {
-		return nil, err
-	}
-	width := int32(float64(src.Bounds().Dx()) * scale)
-	height := int32(float64(src.Bounds().Dy()) * scale)
+func RenderLanczos(serv proto.EaselServiceClient, easelID, paletteID string, data []byte, src image.Image, width, height int) ([]byte, error) {
 	resp, err := serv.Render(context.Background(), &proto.RenderRequest{
 		EaselId:    easelID,
 		PaletteId:  paletteID,
 		OutFormat:  "image/png",
 		OutQuality: 95,
-		OutWidth:   width,
-		OutHeight:  height,
+		OutWidth:   int32(width),
+		OutHeight:  int32(height),
 		Updates: &proto.PaletteUpdate{
 			UniformVariables: []*proto.UniformVariable{
 				&proto.UniformVariable{
 					Name:    "tex",
-					Texture: buff,
+					Texture: data,
 				},
 				&proto.UniformVariable{
 					Name: "scale",
 					FloatValue: &proto.UniformFloatValue{
 						ElementSize: 2,
 						Data: []float32{
-							float32(scale),
-							float32(scale)}}},
+							float32(width) / float32(src.Bounds().Dx()),
+							float32(height) / float32(src.Bounds().Dy())}}},
 				&proto.UniformVariable{
 					Name: "srcSize",
 					FloatValue: &proto.UniformFloatValue{

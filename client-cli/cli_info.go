@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 var gitRev string
@@ -23,4 +25,13 @@ func DecodeGitRev() string {
 		return "<not available>"
 	}
 	return string(data)
+}
+
+func printStartupBanner() {
+	log.Info("****************************************")
+	log.Info("              Easel Client              ")
+	log.Info("****************************************")
+	log.Infof("Build at: %s", BuildAt())
+	log.Infof("Git Revision: \n%s", DecodeGitRev())
+	log.Info("****************************************")
 }

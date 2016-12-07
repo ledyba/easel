@@ -1,4 +1,2 @@
-easel-server
-easel-client
+bin
 .*
-*.png

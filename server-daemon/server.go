@@ -15,6 +15,7 @@ import (
 
 	"github.com/ledyba/easel"
 	"github.com/ledyba/easel/proto"
+	"github.com/ledyba/easel/util"
 
 	log "github.com/Sirupsen/logrus"
 	context "golang.org/x/net/context"
@@ -154,7 +155,7 @@ func (serv *Server) NewEasel(c context.Context, req *proto.NewEaselRequest) (*pr
 			}, nil
 		}
 	}
-	name := RandString(10)
+	name := util.RandString(10)
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	serv.makeEasel(name)
@@ -188,7 +189,7 @@ func (serv *Server) NewPalette(ctx context.Context, req *proto.NewPaletteRequest
 	if err != nil {
 		return nil, err
 	}
-	name := RandString(10)
+	name := util.RandString(10)
 	ent.paletteMap[name] = &PaletteEntry{
 		palette:       palette,
 		usedAt:        time.Now(),

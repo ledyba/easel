@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"image"
 	_ "image/jpeg"
 	_ "image/png"
 	"io/ioutil"
@@ -11,7 +12,9 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/ledyba/easel/filters"
 	"github.com/ledyba/easel/proto"
+	"github.com/ledyba/easel/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -81,13 +84,21 @@ func main() {
 
 	/**** Update Palette ****/
 	var output []byte
+	var input []byte
+	var src image.Image
 	switch *filter {
 	case "lanczos":
-		err = UpdateLanczos(serv, presp.EaselId, presp.PaletteId, *lobes)
+		err = filters.UpdateLanczos(serv, presp.EaselId, presp.PaletteId, *lobes)
 		if err != nil {
 			log.Fatal(err)
 		}
-		output, err = RenderLanczos(serv, presp.EaselId, presp.PaletteId, flag.Arg(0), *scale)
+		input, src, err = util.LoadImage(flag.Arg(0))
+		if err != nil {
+			log.Fatal(err)
+		}
+		widthf := *scale * float64(src.Bounds().Dx())
+		heightf := *scale * float64(src.Bounds().Dy())
+		output, err = filters.RenderLanczos(serv, presp.EaselId, presp.PaletteId, input, src, int(widthf), int(heightf))
 		if err != nil {
 			log.Fatal(err)
 		}
