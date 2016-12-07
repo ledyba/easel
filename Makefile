@@ -1,4 +1,4 @@
-.PHONY: all test inst cl
+.PHONY: all test inst cl clean
 
 GIT_REV=$(shell git log -1 | base64)
 NOW=$(shell date -u "+%Y/%m/%d %H:%M:%S")
@@ -19,24 +19,27 @@ inst:
 proto/easel_service.pb.go: proto/easel_service.proto
 	cd proto && PATH=$(GOPATH)/bin:$(PATH) protoc --go_out=plugins=grpc:. easel_service.proto
 
-bin:
-	mkdir -p bin
-
-bin/server: bin proto/easel_service.pb.go $(shell find server-daemon -type f -name '*.go')
+bin/server: proto/easel_service.pb.go $(shell find server-daemon filters proto util -type f -name '*.go')
+	@mkdir -p bin
 	go build -o bin/server \
 					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
 					"github.com/ledyba/easel/server-daemon"
 
-bin/cli: bin proto/easel_service.pb.go $(shell find client-cli -type f -name '*.go')
+bin/cli: proto/easel_service.pb.go $(shell find client-cli filters proto util -type f -name '*.go')
+	@mkdir -p bin
 	go build -o bin/cli \
 					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
 					"github.com/ledyba/easel/client-cli"
 
 
-bin/client: bin proto/easel_service.pb.go $(shell find client-daemon -type f -name '*.go')
+bin/client: proto/easel_service.pb.go $(shell find client-daemon filters proto util -type f -name '*.go')
+	@mkdir -p bin
 	go build -o bin/client \
 					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
 					"github.com/ledyba/easel/client-daemon"
+
+clean:
+	rm -rf bin
 
 cl:
 	@find . -type f -name \*.go | xargs wc -l
