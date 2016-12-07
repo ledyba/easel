@@ -5,6 +5,7 @@ import (
 	"image/png"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"runtime"
 	"testing"
@@ -26,42 +27,50 @@ const FragmentShader = `
 #version 410
 uniform sampler2D tex;
 uniform vec2 srcSize;
+uniform vec2 scale;
 in vec2 uv;
 layout(location = 0) out vec4 color;
-const float PI = 3.14159265358979323846264338327950288;
-const int lobe = 11;
+const float kPI = 3.14159265358979323846264338327950288;
+const int kLobe = 10;
 
 double L(float x) {
 	if (abs(x) <= 0.00000001) {
 		return 1;
 	}
-	float px = PI * x;
-	double r = double(lobe) / (double(px) * double(px));
+	float px = kPI * x;
+	double r = double(kLobe) / (double(px) * double(px));
 	r *= sin(px);
-	r *= sin(px / float(lobe));
+	r *= sin(px / float(kLobe));
 	return r;
 }
 
 void main() {
   dvec4 sum = vec4(0,0,0,0);
-  double deltaX = 0.12;
-  double deltaY = 0.12;
-
   vec2 srcPt = srcSize * uv;
   vec2 base = floor(srcPt) + vec2(0.5, 0.5);
 
   vec2 pt;
   dvec4 c;
   double w;
-  for(int dx = -(lobe-1); dx <= lobe; dx++) {
-    for(int dy = -(lobe-1); dy <= lobe; dy++) {
-      pt = base + vec2(dx,dy);
+  double sumw = 0;
+  vec2 nscale = max(vec2(1,1), 1 / scale);
+  vec2 support = kLobe * nscale;
+  nscale = 1 / nscale;
+  vec2 start = floor(base - support + 0.5);
+  ivec2 contributes = ivec2(support * 2);
+
+  for(int dx = 0; dx < contributes.x; dx++) {
+    for(int dy = 0; dy < contributes.y; dy++) {
+      pt = start + vec2(dx, dy);
       c = dvec4(texture(tex, pt / srcSize));
-      w = L(srcPt.x - pt.x) * L(srcPt.y - pt.y);
+      w = L(nscale.x * (pt.x - srcPt.x + 0.5)) * L(nscale.y * (pt.y - srcPt.y + 0.5));
+      sumw += w;
       sum += c * w;
     }
   }
-	color = vec4(min(dvec4(1,1,1,1), max(sum, dvec4(0,0,0,0))));
+  sum /= sumw;
+  color = vec4(clamp(sum, dvec4(0,0,0,0), dvec4(1,1,1,1)));
+  color.a = 1;
 }
 
 `
@@ -119,6 +128,10 @@ func TestRender(t *testing.T) {
 
 	p.BindUniformf("srcSize", 2, []float32{
 		float32(src.Bounds().Dx()), float32(src.Bounds().Dy())})
+	p.BindUniformf("scale", 2, []float32{
+		float32(math.Max(1.0, float64(512.0)/float64(src.Bounds().Dx()))),
+		float32(math.Max(1.0, float64(512.0)/float64(src.Bounds().Dy()))),
+	})
 
 	p.vertexArray.bind()
 	indecies, err := p.AttachArrayIndexBuffer([]uint16{0, 1, 3, 2, 3, 0})
@@ -142,7 +155,7 @@ func TestRender(t *testing.T) {
 
 	p.BindTexture("tex", tex)
 
-	img, err := p.Render(image.Rect(0, 0, 256, 256))
+	img, err := p.Render(image.Rect(0, 0, 512, 512))
 	if err != nil {
 		t.Fatalf("Could not execute: \n** Message **\n%v", err)
 	}

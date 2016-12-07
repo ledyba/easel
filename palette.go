@@ -69,12 +69,12 @@ func (p *Palette) BindArrayAttrib(vertexbuffer *VertexBuffer, indecies *VertexBu
 		return err
 	}
 	gl.EnableVertexAttribArray(uint32(idx))
-	err = checkGLError(fmt.Sprintf("Error while enabling vertex attrib array (location: %d)", idx))
+	err = checkGLError(fmt.Sprintf("Error on enabling vertex attrib array (location: %d)", idx))
 	if err != nil {
 		return err
 	}
 	gl.VertexAttribPointer(uint32(idx), size, gl.FLOAT, false, stride, gl.PtrOffset(int(offset)))
-	return checkGLError("Error while binding array attrib.")
+	return checkGLError("Error on binding array attrib.")
 }
 
 // BindUniformf ...
@@ -142,7 +142,7 @@ func (p *Palette) BindTexture(name string, tex *Texture2D) (*Texture2D, error) {
 	}
 	log.Debugf("%s assigned to TextureUnit %d", name, idx+1)
 	gl.ActiveTexture(gl.TEXTURE1 + uint32(idx))
-	if err = checkGLError(fmt.Sprintf("Error while activate texture unit %d", idx+1)); err != nil {
+	if err = checkGLError(fmt.Sprintf("Error on activate texture unit %d", idx+1)); err != nil {
 		return nil, err
 	}
 	err = tex.bind()
@@ -198,21 +198,21 @@ func (p *Palette) Render(size image.Rectangle) (image.Image, error) {
 	var err error
 	var texID uint32
 	gl.BindFramebuffer(gl.FRAMEBUFFER, p.frameBufferID)
-	err = checkGLError("Error while binding framebuffer")
+	err = checkGLError("Error on binding framebuffer")
 	if err != nil {
 		return nil, err
 	}
 
-	if err = checkGLError("Error while binding framebuffer"); err != nil {
+	if err = checkGLError("Error on binding framebuffer"); err != nil {
 		return nil, err
 	}
 	/* Setup Texture for FrameBuffer */
 	gl.ActiveTexture(gl.TEXTURE0)
-	if err = checkGLError("Error while activate texture unit 0"); err != nil {
+	if err = checkGLError("Error on activate texture unit 0"); err != nil {
 		return nil, err
 	}
 	gl.GenTextures(1, &texID)
-	if err = checkGLError("Error while generating framebuffer texture"); err != nil {
+	if err = checkGLError("Error on generating framebuffer texture"); err != nil {
 		return nil, err
 	}
 	gl.BindTexture(gl.TEXTURE_2D, texID)
@@ -220,23 +220,23 @@ func (p *Palette) Render(size image.Rectangle) (image.Image, error) {
 		return nil, err
 	}
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(size.Dx()), int32(size.Dy()), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(nil))
-	if err = checkGLError("Error while creating empty framebuffer texture"); err != nil {
+	if err = checkGLError("Error on creating empty framebuffer texture"); err != nil {
 		return nil, err
 	}
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-	if err = checkGLError("Error while setting framebuffer texture parameter"); err != nil {
+	if err = checkGLError("Error on setting framebuffer texture parameter"); err != nil {
 		return nil, err
 	}
 	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texID, 0)
-	if err = checkGLError("Error while attaching framebuffer texture"); err != nil {
+	if err = checkGLError("Error on attaching framebuffer texture"); err != nil {
 		return nil, err
 	}
 	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE {
 		return nil, errors.New("Invalid Framebuffer Status")
 	}
 	gl.Viewport(0, 0, int32(size.Dx()), int32(size.Dy()))
-	if err = checkGLError("Error while set viewport"); err != nil {
+	if err = checkGLError("Error on setting viewport"); err != nil {
 		return nil, err
 	}
 	/* Start rendering */
@@ -249,8 +249,16 @@ func (p *Palette) Render(size image.Rectangle) (image.Image, error) {
 	}
 	defer p.vertexArray.unbind()
 
-	gl.DrawElements(gl.TRIANGLES, int32(p.indecies.length), gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.Enable(gl.BLEND)
+	if err = checkGLError("Error on enabling glBlend"); err != nil {
+		return nil, err
+	}
+	gl.BlendFunc(gl.ONE, gl.ZERO)
+	if err = checkGLError("Error on set blend func"); err != nil {
+		return nil, err
+	}
 
+	gl.DrawElements(gl.TRIANGLES, int32(p.indecies.length), gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	if err = checkGLError("Error on DrawArrays"); err != nil {
 		return nil, err
 	}
@@ -258,7 +266,7 @@ func (p *Palette) Render(size image.Rectangle) (image.Image, error) {
 
 	/* Readback the output */
 	gl.ActiveTexture(gl.TEXTURE0)
-	if err = checkGLError("Error while activate texture unit 0"); err != nil {
+	if err = checkGLError("Error on activate texture unit 0"); err != nil {
 		return nil, err
 	}
 	gl.BindTexture(gl.TEXTURE_2D, texID)
