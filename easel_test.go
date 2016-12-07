@@ -69,8 +69,7 @@ void main() {
     }
   }
   sum /= sumw;
-  color = vec4(clamp(sum, dvec4(0,0,0,0), dvec4(1,1,1,1)));
-  color.a = 1;
+	color = vec4(clamp(sum, dvec4(0,0,0,0), dvec4(1,1,1,1)));
 }
 
 `

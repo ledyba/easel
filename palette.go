@@ -253,11 +253,22 @@ func (p *Palette) Render(size image.Rectangle) (image.Image, error) {
 	if err = checkGLError("Error on enabling glBlend"); err != nil {
 		return nil, err
 	}
-	gl.BlendFunc(gl.ONE, gl.ZERO)
-	if err = checkGLError("Error on set blend func"); err != nil {
+	gl.ClearColor(0, 0, 0, 0)
+	if err = checkGLError("Error on setting clear color"); err != nil {
+		return nil, err
+	}
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+	if err = checkGLError("Error on clearing color buffer"); err != nil {
+		return nil, err
+	}
+	gl.BlendFuncSeparate(gl.SRC_ALPHA, gl.ZERO, gl.ONE, gl.ZERO)
+	if err = checkGLError("Error on setting BlendFuncSeparate"); err != nil {
 		return nil, err
 	}
 
+	if err = checkGLError("Error on enabling glBlend"); err != nil {
+		return nil, err
+	}
 	gl.DrawElements(gl.TRIANGLES, int32(p.indecies.length), gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	if err = checkGLError("Error on DrawArrays"); err != nil {
 		return nil, err
