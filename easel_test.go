@@ -31,7 +31,7 @@ uniform vec2 scale;
 in vec2 uv;
 layout(location = 0) out vec4 color;
 const float kPI = 3.14159265358979323846264338327950288;
-const int kLobe = 10;
+const int kLobe = 3;
 
 double L(float x) {
 	if (abs(x) <= 0.00000001) {
@@ -78,12 +78,49 @@ void main() {
 func init() {
 }
 
+func startup() {
+	runtime.LockOSThread()
+	glfw.Init()
+}
+
+func shutdown() {
+	glfw.Terminate()
+	runtime.UnlockOSThread()
+}
+
+func TestCreateEasel(t *testing.T) {
+	startup()
+	defer shutdown()
+	e := NewEasel()
+	e.MakeCurrent()
+	defer e.DetachCurrent()
+	defer e.Destroy()
+}
+
+func TestCreatePalette(t *testing.T) {
+	var err error
+	startup()
+	defer shutdown()
+	e := NewEasel()
+	e.MakeCurrent()
+	defer e.DetachCurrent()
+	defer e.Destroy()
+	p, err := e.NewPalette()
+	if err != nil {
+		t.Fatalf("Could not creating palette: \n** Message **\n%v", err)
+	}
+	err = p.Bind()
+	if err != nil {
+		t.Fatalf("Could not bind palette: \n** Message **\n%v", err)
+	}
+	defer p.Unbind()
+	defer p.Destroy()
+}
+
 func TestRender(t *testing.T) {
 	var err error
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-	glfw.Init()
-	defer glfw.Terminate()
+	startup()
+	defer shutdown()
 	e := NewEasel()
 	e.MakeCurrent()
 	defer e.DetachCurrent()
@@ -129,8 +166,8 @@ func TestRender(t *testing.T) {
 	p.BindUniformf("srcSize", 2, []float32{
 		float32(src.Bounds().Dx()), float32(src.Bounds().Dy())})
 	p.BindUniformf("scale", 2, []float32{
-		float32(math.Max(1.0, float64(512.0)/float64(src.Bounds().Dx()))),
-		float32(math.Max(1.0, float64(512.0)/float64(src.Bounds().Dy()))),
+		float32(math.Max(1.0, float64(256.0)/float64(src.Bounds().Dx()))),
+		float32(math.Max(1.0, float64(256.0)/float64(src.Bounds().Dy()))),
 	})
 
 	p.vertexArray.bind()
@@ -155,7 +192,7 @@ func TestRender(t *testing.T) {
 
 	p.BindTexture("tex", tex)
 
-	img, err := p.Render(image.Rect(0, 0, 512, 512))
+	img, err := p.Render(image.Rect(0, 0, 256, 256))
 	if err != nil {
 		t.Fatalf("Could not execute: \n** Message **\n%v", err)
 	}
