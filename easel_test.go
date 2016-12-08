@@ -147,7 +147,7 @@ func TestRender(t *testing.T) {
 	defer prog.Destroy()
 
 	/**** Render Image ****/
-	freader, err := os.Open("test.png")
+	freader, err := os.Open("test-images/momiji.png")
 	if err != nil {
 		log.Fatal(err)
 	}

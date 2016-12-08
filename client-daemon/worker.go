@@ -113,15 +113,21 @@ func (w *Worker) render(req *ResampleRequest) ([]byte, error) {
 }
 
 func (w *Worker) destroy() {
-	w.server.DeletePalette(context.Background(), &proto.DeletePaletteRequest{
-		EaselId:   w.easelID,
-		PaletteId: w.paletteID,
-	})
-	log.Infof("[%d] Palette Deleted: (%s > %s)", w.name, w.easelID, w.paletteID)
-	w.server.DeleteEasel(context.Background(), &proto.DeleteEaselRequest{
-		EaselId: w.easelID,
-	})
-	log.Infof("[%d] Easel Deleted: %s", w.name, w.easelID)
+	if len(w.paletteID) > 0 {
+		w.server.DeletePalette(context.Background(), &proto.DeletePaletteRequest{
+			EaselId:   w.easelID,
+			PaletteId: w.paletteID,
+		})
+		log.Infof("[%d] Palette Deleted: (%s > %s)", w.name, w.easelID, w.paletteID)
+		w.paletteID = ""
+	}
+	if len(w.easelID) > 0 {
+		w.server.DeleteEasel(context.Background(), &proto.DeleteEaselRequest{
+			EaselId: w.easelID,
+		})
+		log.Infof("[%d] Easel Deleted: %s", w.name, w.easelID)
+		w.easelID = ""
+	}
 	w.conn.Close()
 	log.Infof("[%d] Worker Destoyed", w.name)
 }

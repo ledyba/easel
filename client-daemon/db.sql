@@ -1,5 +1,5 @@
 create table ResampleRequest (
-  id int auto_increment
+  id int not null auto_increment,
   src VARCHAR(1024),
   dst VARCHAR(1024),
   dst_width int,
@@ -8,5 +8,6 @@ create table ResampleRequest (
   created_at datetime,
   updated_at datetime,
   status int, -- 0=enqueued, 1=in progress,2=done, 3=error
-  message text -- error message
+  message text, -- error message
+  primary key(id)
 )

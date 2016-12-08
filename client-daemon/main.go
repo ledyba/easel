@@ -15,15 +15,15 @@ import (
 )
 
 const (
-	reqStatusPending  = 0
-	reqStatusEnqueued = 1
-	reqStatusDone     = 2
-	reqStatusError    = 3
+	reqStatusEnqueued   = 0
+	reqStatusInProgress = 1
+	reqStatusDone       = 2
+	reqStatusError      = 3
 )
 
 /* Server to work with */
 var server *string = flag.String("server", "localhost:3000", "server to connect")
-var db *string = flag.String("server", "user:password@tcp(host:port)/dbname", "db address")
+var dbAddr *string = flag.String("db", "user:password@tcp(host:port)/dbname", "db address")
 
 var workers *int = flag.Int("workers", 10, "workers to run")
 
@@ -51,14 +51,18 @@ func main() {
 		return
 	}
 
+	/* messaging queue */
 	requestQueue := make(chan *ResampleRequest, 100)
-	resultQueue := make(chan *ResampleRequest, 100)
+	notifyQueue := make(chan *ResampleRequest, 100)
+	/* chan to controll worker counts */
 	workerRestartChan := make(chan bool, *workers)
 	for i := 0; i < *workers; i++ {
 		workerRestartChan <- true
 	}
 	fetcherRestartChan := make(chan bool, 1)
 	fetcherRestartChan <- true
+	notifierRestartChan := make(chan bool, 1)
+	notifierRestartChan <- true
 	for {
 		select {
 		case <-workerRestartChan:
@@ -90,10 +94,10 @@ func main() {
 						output, err = w.render(r)
 						if err != nil {
 							r.err = err
-							resultQueue <- r
+							notifyQueue <- r
 						} else {
 							ioutil.WriteFile(r.dst, output, os.ModePerm)
-							resultQueue <- r
+							notifyQueue <- r
 						}
 					}
 				}
@@ -106,7 +110,7 @@ func main() {
 				})()
 				var db *sql.DB
 				var err error
-				db, err = sql.Open("mysql", "user:password@tcp(host:port)/dbname")
+				db, err = sql.Open("mysql", *dbAddr)
 				if err != nil {
 					log.Errorf("Error on connecting DB: %v", err)
 					return
@@ -118,7 +122,7 @@ func main() {
 					select {
 					case <-timer.C:
 						err = (func() error {
-							rows, err = db.Query("select id,src,dst,dst_width,dst_height,dst_quality from ResampleRequest where status = 0")
+							rows, err = db.Query("select id,src,dst,dst_width,dst_height,dst_quality from ResampleRequest where status = %d", reqStatusEnqueued)
 							if err != nil {
 								log.Errorf("Error on selecting db: %v", err)
 								return err
@@ -132,7 +136,7 @@ func main() {
 									return err
 								}
 								var q sql.Result
-								q, err = db.Exec("update ResampleRequest SET status=1, updated_at=now() where id=? and ", r.id)
+								q, err = db.Exec("update ResampleRequest SET status=?, updated_at=now() where id=? and status=?", reqStatusInProgress, r.id, reqStatusEnqueued)
 								if err != nil {
 									log.Errorf("Error on selecting db: %v", err)
 									return err
@@ -164,7 +168,37 @@ func main() {
 					}
 				}
 			})()
+		case <-notifierRestartChan:
+			go (func() {
+				defer (func() {
+					time.Sleep(3 * time.Second)
+					notifierRestartChan <- true
+				})()
+				var db *sql.DB
+				var err error
+				db, err = sql.Open("mysql", *dbAddr)
+				if err != nil {
+					log.Errorf("Error on connecting DB: %v", err)
+					return
+				}
+				defer db.Close()
+				for {
+					select {
+					case r := <-notifyQueue:
+						var q sql.Result
+						if r.err != nil {
+							q, err = db.Exec("update ResampleRequest SET status=?, updated_at=now() where id=?", reqStatusDone, r.id)
+						} else {
+							q, err = db.Exec("update ResampleRequest SET status=?, message=?, updated_at=now() where id=?", reqStatusError, r.err.Error(), r.id)
+						}
+						if err != nil {
+							log.Errorf("Error on selecting db: %v", err)
+							return
+						}
+						q.RowsAffected()
+					}
+				}
+			})()
 		}
 	}
-
 }
