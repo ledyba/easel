@@ -12,18 +12,24 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/ledyba/easel/filters"
+	filters "github.com/ledyba/easel/image-filters"
 	"github.com/ledyba/easel/proto"
 	"github.com/ledyba/easel/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
+/* Server to work with */
 var server *string = flag.String("server", "localhost:3000", "server to connect")
-var filter *string = flag.String("filter", "lanczos", "Filternames.")
-var lobes *int = flag.Int("lobes", 10, "lobes parameter")
-var help *bool = flag.Bool("help", false, "Print help and exit")
+
+/* Filter Flags */
+var filter *string = flag.String("filter", "lanczos", "applied filter name.")
+var lobes *int = flag.Int("filter_lobes", 10, "lobes parameter")
 var scale *float64 = flag.Float64("scale", 2.0, "scale")
+var quality *float64 = flag.Float64("quality", 95.0, "quality")
+
+/* General */
+var help *bool = flag.Bool("help", false, "Print help and exit")
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `
@@ -98,7 +104,7 @@ func main() {
 		}
 		widthf := *scale * float64(src.Bounds().Dx())
 		heightf := *scale * float64(src.Bounds().Dy())
-		output, err = filters.RenderLanczos(serv, presp.EaselId, presp.PaletteId, input, src, int(widthf), int(heightf))
+		output, err = filters.RenderLanczos(serv, presp.EaselId, presp.PaletteId, input, src, int(widthf), int(heightf), float32(*quality))
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -3,7 +3,7 @@
 GIT_REV=$(shell git log -1 | base64)
 NOW=$(shell date -u "+%Y/%m/%d %H:%M:%S")
 
-all: bin/server bin/client bin/cli
+all: bin/server bin/client-daemon bin/client-cli
 
 test:
 	go test .
@@ -15,26 +15,27 @@ inst:
 	go get -u "github.com/golang/protobuf/protoc-gen-go"
 	go get -u "google.golang.org/grpc"
 	go get -u "github.com/chai2010/webp"
+	go get -u "github.com/go-sql-driver/mysql"
 
 proto/easel_service.pb.go: proto/easel_service.proto
 	cd proto && PATH=$(GOPATH)/bin:$(PATH) protoc --go_out=plugins=grpc:. easel_service.proto
 
-bin/server: proto/easel_service.pb.go $(shell find server-daemon filters proto util -type f -name '*.go')
+bin/server: proto/easel_service.pb.go $(shell find server image-filters proto util -type f -name '*.go')
 	@mkdir -p bin
 	go build -o bin/server \
 					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
-					"github.com/ledyba/easel/server-daemon"
+					"github.com/ledyba/easel/server"
 
-bin/cli: proto/easel_service.pb.go $(shell find client-cli filters proto util -type f -name '*.go')
+bin/client-cli: proto/easel_service.pb.go $(shell find client-cli image-filters proto util -type f -name '*.go')
 	@mkdir -p bin
-	go build -o bin/cli \
+	go build -o bin/ClientConncli \
 					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
 					"github.com/ledyba/easel/client-cli"
 
 
-bin/client: proto/easel_service.pb.go $(shell find client-daemon filters proto util -type f -name '*.go')
+bin/client-daemon: proto/easel_service.pb.go $(shell find client-daemon image-filters proto util -type f -name '*.go')
 	@mkdir -p bin
-	go build -o bin/client \
+	go build -o bin/client-daemon \
 					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
 					"github.com/ledyba/easel/client-daemon"
 

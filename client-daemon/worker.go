@@ -1,13 +1,12 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"image"
 	"sync/atomic"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/ledyba/easel/filters"
+	filters "github.com/ledyba/easel/image-filters"
 	"github.com/ledyba/easel/util"
 
 	"github.com/ledyba/easel/proto"
@@ -22,6 +21,18 @@ type Worker struct {
 	server    proto.EaselServiceClient
 	easelID   string
 	paletteID string
+}
+
+// ResampleRequest ...
+type ResampleRequest struct {
+	id         int
+	src        string
+	dst        string
+	dstWidth   int
+	dstHeight  int
+	dstQuality float32
+	status     int
+	err        error
 }
 
 var workerCount int32
@@ -79,7 +90,7 @@ func (w *Worker) init() error {
 	return nil
 }
 
-func (w *Worker) render(fname string, width, height int) ([]byte, error) {
+func (w *Worker) render(req *ResampleRequest) ([]byte, error) {
 	var err error
 	/**** Let's Render ****/
 	var output []byte
@@ -87,11 +98,11 @@ func (w *Worker) render(fname string, width, height int) ([]byte, error) {
 	var src image.Image
 	switch *filter {
 	case filters.LanczosFilter:
-		input, src, err = util.LoadImage(flag.Arg(0))
+		input, src, err = util.LoadImage(req.src)
 		if err != nil {
 			return nil, err
 		}
-		output, err = filters.RenderLanczos(w.server, w.easelID, w.paletteID, input, src, width, height)
+		output, err = filters.RenderLanczos(w.server, w.easelID, w.paletteID, input, src, req.dstWidth, req.dstHeight, req.dstQuality)
 		if err != nil {
 			return nil, err
 		}

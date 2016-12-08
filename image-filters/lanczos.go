@@ -17,6 +17,8 @@ const (
 // UpdateLanczos ...
 func UpdateLanczos(serv proto.EaselServiceClient, easelID, paletteID string, lobes int) error {
 	var err error
+	// based on ImageMagick
+	// https://github.com/ImageMagick/ImageMagick/blob/f6ff9eaa865134189fce2cf73b109da589178bde/MagickCore/resize.c#L2389
 	const VertexShader = `
   #version 410 core
   layout(location = 0) in vec3 vert;
@@ -123,12 +125,12 @@ func UpdateLanczos(serv proto.EaselServiceClient, easelID, paletteID string, lob
 }
 
 // RenderLanczos ...
-func RenderLanczos(serv proto.EaselServiceClient, easelID, paletteID string, data []byte, src image.Image, width, height int) ([]byte, error) {
+func RenderLanczos(serv proto.EaselServiceClient, easelID, paletteID string, data []byte, src image.Image, width, height int, quality float32) ([]byte, error) {
 	resp, err := serv.Render(context.Background(), &proto.RenderRequest{
 		EaselId:    easelID,
 		PaletteId:  paletteID,
 		OutFormat:  "image/png",
-		OutQuality: 95,
+		OutQuality: quality,
 		OutWidth:   int32(width),
 		OutHeight:  int32(height),
 		Updates: &proto.PaletteUpdate{
