@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bufio"
@@ -76,7 +76,8 @@ func (ent *PaletteEntry) unlock() {
 	ent.mutex.Unlock()
 }
 
-func newServer(em *EaselMaker) *Server {
+// NewServer ...
+func NewServer(em *EaselMaker) *Server {
 	return &Server{
 		easelMaker: em,
 		easelMutex: new(sync.Mutex),
@@ -84,7 +85,8 @@ func newServer(em *EaselMaker) *Server {
 	}
 }
 
-func (serv *Server) startGC() {
+// StartGC ...
+func (serv *Server) StartGC() {
 	t := time.NewTicker(ExpiredDuration)
 	log.Info("Start Easel GC")
 	for {

@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"github.com/ledyba/easel/proto"
+	impl "github.com/ledyba/easel/server-impl"
 	"google.golang.org/grpc"
 
 	_ "image/gif"
@@ -25,13 +26,13 @@ func init() {
 
 var port = flag.Int("port", 3000, "port to listen")
 
-func startServer(lis net.Listener, em *EaselMaker) {
+func startServer(lis net.Listener, em *impl.EaselMaker) {
 	log.Infof("Now listen at :%d", *port)
-	server := grpc.NewServer()
-	impl := newServer(em)
-	go impl.startGC()
-	proto.RegisterEaselServiceServer(server, impl)
-	server.Serve(lis)
+	gserver := grpc.NewServer()
+	server := impl.NewServer(em)
+	go server.StartGC()
+	proto.RegisterEaselServiceServer(gserver, server)
+	gserver.Serve(lis)
 }
 
 func main() {
@@ -49,7 +50,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	em := NewEaselMaker()
+	em := impl.NewEaselMaker()
 	go startServer(lis, em)
 	em.Start()
 }
