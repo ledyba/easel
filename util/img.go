@@ -25,5 +25,4 @@ func LoadImage(fname string) ([]byte, image.Image, error) {
 		return nil, nil, err
 	}
 	return buff, src, nil
-
 }
