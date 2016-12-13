@@ -122,7 +122,7 @@ func main() {
 					select {
 					case <-timer.C:
 						err = (func() error {
-							rows, err = db.Query("select id,src,dst,dst_width,dst_height,dst_quality from ResampleRequest where status = %d", reqStatusEnqueued)
+							rows, err = db.Query("select `id`,`src`,`dst`,`dst_width`,`dst_height`,`dst_quality` from ResampleRequest where status = %d", reqStatusEnqueued)
 							if err != nil {
 								log.Errorf("Error on selecting db: %v", err)
 								return err
@@ -136,7 +136,7 @@ func main() {
 									return err
 								}
 								var q sql.Result
-								q, err = db.Exec("update ResampleRequest SET status=?, updated_at=now() where id=? and status=?", reqStatusInProgress, r.id, reqStatusEnqueued)
+								q, err = db.Exec("update ResampleRequest SET `status`=? where `id`=? and `status`=?", reqStatusInProgress, r.id, reqStatusEnqueued)
 								if err != nil {
 									log.Errorf("Error on selecting db: %v", err)
 									return err
@@ -155,7 +155,7 @@ func main() {
 					case r := <-requestQueue:
 						if r.err == nil {
 							var q sql.Result
-							q, err = db.Exec("update EaselRequest SET status=2, updated_at=now() where id=?", r.id)
+							q, err = db.Exec("update EaselRequest SET `status`=2 where `id`=?", r.id)
 							if err != nil {
 								log.Errorf("Error on selecting db: %v", err)
 								break
@@ -187,9 +187,9 @@ func main() {
 					case r := <-notifyQueue:
 						var q sql.Result
 						if r.err != nil {
-							q, err = db.Exec("update ResampleRequest SET status=?, updated_at=now() where id=?", reqStatusDone, r.id)
+							q, err = db.Exec("update ResampleRequest SET `status`=? where `id`=?", reqStatusDone, r.id)
 						} else {
-							q, err = db.Exec("update ResampleRequest SET status=?, message=?, updated_at=now() where id=?", reqStatusError, r.err.Error(), r.id)
+							q, err = db.Exec("update ResampleRequest SET `status`=?, `message`=? where `id`=?", reqStatusError, r.err.Error(), r.id)
 						}
 						if err != nil {
 							log.Errorf("Error on selecting db: %v", err)
