@@ -103,7 +103,7 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 	csources, free := gl.Strs(source + "\x00")
 	gl.ShaderSource(shader, 1, csources, nil)
 	free()
-	err = checkGLError("Error while attaching shader sourcr")
+	err = checkGLError("Error while attaching shader source")
 	if err != nil {
 		return 0, err
 	}

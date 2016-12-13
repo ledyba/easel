@@ -280,3 +280,99 @@ func TestBindUniform(t *testing.T) {
 		t.Errorf("Failed to execute shader. Expected green pixel, but got (%d,%d,%d,%d)", r, g, b, a)
 	}
 }
+
+func TestRenderTexture(t *testing.T) {
+	var err error
+	startup()
+	defer shutdown()
+	e := NewEasel()
+	e.MakeCurrent()
+	defer e.DetachCurrent()
+	defer e.Destroy()
+	p, err := e.NewPalette()
+	if err != nil {
+		t.Fatalf("Could not creating palette: \n** Message **\n%v", err)
+	}
+	err = p.Bind()
+	if err != nil {
+		t.Fatalf("Could not bind palette: \n** Message **\n%v", err)
+	}
+	defer p.Unbind()
+	defer p.Destroy()
+
+	const VertexShader = `
+  #version 410 core
+  layout(location = 0) in vec3 vert;
+  out vec2 uv;
+
+  void main() {
+  	uv = (vert.xy+vec2(1,1))/2.0;
+  	gl_Position = vec4(vert, 1);
+  }
+  `
+	const FragmentShader = `
+  #version 410
+  uniform sampler2D tex;
+  in vec2 uv;
+	layout(location = 0) out vec4 color;
+
+  void main() {
+  	color = texture(tex, uv);
+  }
+  `
+	prog, err := e.CompileProgram(VertexShader, FragmentShader)
+	if err != nil {
+		t.Fatalf("Failed to compile program. %v", err)
+	}
+	p.AttachProgram(prog)
+	prog.Use()
+	defer prog.Unuse()
+	defer prog.Destroy()
+
+	freader, err := os.Open("test-images/momiji.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer freader.Close()
+	img, _, err := image.Decode(freader)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tex, err := e.CreateTexture2D(img)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	p.BindTexture("tex", tex)
+
+	p.vertexArray.bind()
+	indecies, err := p.AttachArrayIndexBuffer([]uint16{0, 1, 3, 2, 3, 0})
+	if err != nil {
+		t.Fatalf("Could not bind array indecies: \n** Message **\n%v", err)
+	}
+	buf, err := p.MakeArrayBuffer([]float32{
+		-1, -1, 0,
+		1, -1, 0,
+		-1, 1, 0,
+		1, 1, 0,
+	})
+
+	if err != nil {
+		t.Fatalf("Could not create texure: \n** Message **\n%v", err)
+	}
+	err = p.BindArrayAttrib(buf, indecies, "vert", 3, 0, 0)
+	if err != nil {
+		t.Fatalf("Could not bind array attrib: \n** Message **\n%v", err)
+	}
+
+	rendered, err := p.Render(image.Rect(0, 0, img.Bounds().Dx(), img.Bounds().Dy()))
+	if err != nil {
+		t.Fatalf("Could not execute: \n** Message **\n%v", err)
+	}
+
+	if rendered.At(0, 0) != img.At(0, 0) {
+	} else {
+		t.Errorf("Failed to execute shader. Expected the same pixel, but got %v != %v", img, rendered)
+	}
+}
