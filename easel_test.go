@@ -190,10 +190,11 @@ func TestRender(t *testing.T) {
 		-1, 1, 0,
 		1, 1, 0,
 	})
-
 	if err != nil {
 		t.Fatalf("Could not create texure: \n** Message **\n%v", err)
 	}
+	defer buf.Destroy()
+
 	err = p.BindArrayAttrib(buf, indecies, "vert", 3, 0, 0)
 	if err != nil {
 		t.Fatalf("Could not bind array attrib: \n** Message **\n%v", err)
@@ -260,10 +261,11 @@ func TestBindUniform(t *testing.T) {
 		-1, 1, 0,
 		1, 1, 0,
 	})
-
 	if err != nil {
 		t.Fatalf("Could not create texure: \n** Message **\n%v", err)
 	}
+	defer buf.Destroy()
+
 	err = p.BindArrayAttrib(buf, indecies, "vert", 3, 0, 0)
 	if err != nil {
 		t.Fatalf("Could not bind array attrib: \n** Message **\n%v", err)
@@ -357,10 +359,11 @@ func TestRenderTexture(t *testing.T) {
 		-1, 1, 0,
 		1, 1, 0,
 	})
-
 	if err != nil {
 		t.Fatalf("Could not create texure: \n** Message **\n%v", err)
 	}
+	defer buf.Destroy()
+
 	err = p.BindArrayAttrib(buf, indecies, "vert", 3, 0, 0)
 	if err != nil {
 		t.Fatalf("Could not bind array attrib: \n** Message **\n%v", err)

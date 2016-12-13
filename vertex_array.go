@@ -4,8 +4,7 @@ import "github.com/go-gl/gl/v4.1-core/gl"
 
 // VertexArray ...
 type VertexArray struct {
-	id     uint32
-	length uint32
+	id uint32
 }
 
 func newVertexArray() (*VertexArray, error) {
@@ -33,9 +32,4 @@ func (va *VertexArray) bind() error {
 
 func (va *VertexArray) unbind() {
 	gl.BindVertexArray(0)
-}
-
-// Length returns the length of this VertexArray
-func (va *VertexArray) Length() uint32 {
-	return va.length
 }
