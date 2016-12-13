@@ -219,6 +219,8 @@ func (serv *Server) DeletePalette(ctx context.Context, req *proto.DeletePaletteR
 	if paletteEnt == nil {
 		return nil, ErrPaletteNotFound
 	}
+	paletteEnt.lock()
+	defer paletteEnt.unlock()
 	easelEnt.easel.MakeCurrent()
 	defer easelEnt.easel.DetachCurrent()
 	paletteEnt.palette.Destroy()
