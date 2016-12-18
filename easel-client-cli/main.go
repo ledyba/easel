@@ -34,7 +34,7 @@ var help *bool = flag.Bool("help", false, "Print help and exit")
 func usage() {
 	fmt.Fprintf(os.Stderr, `
 Usage of %s:
-	%s [OPTIONS] IN OUT
+	%s [OPTIONS] FILES...
 Options:
 `, os.Args[0], os.Args[0])
 	flag.PrintDefaults()
@@ -98,26 +98,28 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		input, src, err = util.LoadImage(flag.Arg(0))
-		if err != nil {
-			log.Fatal(err)
-		}
-		widthf := *scale * float64(src.Bounds().Dx())
-		heightf := *scale * float64(src.Bounds().Dy())
-		output, err = filters.RenderLanczos(serv, presp.EaselId, presp.PaletteId, input, src, int(widthf), int(heightf), float32(*quality))
-		if err != nil {
-			log.Fatal(err)
+		/**** Render Image ****/
+		for _, fname := range flag.Args() {
+			input, src, err = util.LoadImage(fname)
+			if err != nil {
+				log.Fatal(err)
+			}
+			widthf := *scale * float64(src.Bounds().Dx())
+			heightf := *scale * float64(src.Bounds().Dy())
+			output, err = filters.RenderLanczos(serv, presp.EaselId, presp.PaletteId, input, src, int(widthf), int(heightf), float32(*quality))
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Infof("Rendered: (%s > %s) %s", presp.EaselId, presp.PaletteId, fname)
+			outFilename := "%s.out.png"
+			err = ioutil.WriteFile(fmt.Sprintf(outFilename, strings.TrimSuffix(fname, path.Ext(fname))), output, os.ModePerm)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Infof("Saved to %s, %d bytes", outFilename, len(output))
 		}
 	default:
 		log.Fatalf("Unknown filter: %s", *filter)
 	}
-
-	/**** Render Image ****/
-	fname := flag.Arg(0)
-	err = ioutil.WriteFile(fmt.Sprintf("%s.out.png", strings.TrimSuffix(fname, path.Ext(fname))), output, os.ModePerm)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Rendered: (%s > %s) %d bytes", presp.EaselId, presp.PaletteId, len(output))
 
 }
