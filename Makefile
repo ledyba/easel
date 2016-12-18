@@ -30,7 +30,7 @@ proto/easel_service.pb.go: proto/easel_service.proto
 
 ####### Executables #######
 
-.bin/easel-server: proto/easel_service.pb.go $(shell find server image-filters proto util -type f -name '*.go')
+.bin/easel-server: proto/easel_service.pb.go $(shell find easel-server image-filters proto util -type f -name '*.go')
 	@mkdir -p .bin
 	go build -o .bin/easel-server \
 					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \

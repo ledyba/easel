@@ -45,11 +45,11 @@ This library lets machines w/o GPU utilize remote GPU power via [grpc](http://ww
 #### Command line flags
 ```
 % ./bin/server -h
-Usage of ./bin/server:
- -help
-     Print help and exit
- -port int
-     port to listen (default 3000)
+Usage of .bin/easel-server:
+  -help
+    	Print help and exit
+  -listen string
+    	listen addr (default ":3000")
 ```
 
 ### Client Daemon

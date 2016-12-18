@@ -71,6 +71,8 @@ func main() {
 				w := newWorker()
 				defer w.destroy()
 				defer (func() {
+					log.Errorf("[%d] Disconnected. Retry in 5 secs...", w.name)
+					time.Sleep(5 * time.Second)
 					workerRestartChan <- true
 				})()
 				err = w.connect()
@@ -105,7 +107,8 @@ func main() {
 		case <-fetcherRestartChan:
 			go (func() {
 				defer (func() {
-					time.Sleep(3 * time.Second)
+					log.Errorf("DB Fetcher disconnected. Retry in 5 secs...")
+					time.Sleep(5 * time.Second)
 					fetcherRestartChan <- true
 				})()
 				var db *sql.DB
@@ -171,7 +174,8 @@ func main() {
 		case <-notifierRestartChan:
 			go (func() {
 				defer (func() {
-					time.Sleep(3 * time.Second)
+					log.Errorf("DB Notifier disconnected. Retry in 5 secs...")
+					time.Sleep(5 * time.Second)
 					notifierRestartChan <- true
 				})()
 				var db *sql.DB
