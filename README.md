@@ -8,7 +8,7 @@ This library lets machines w/o GPU utilize remote GPU power via [grpc](http://ww
 
 ## Sketch
 
-[!./sketch.jpg](./sketch.jpg)
+![design sketch](./sketch.jpg)
 
  - [Server](./server) must be installed to machines **with** GPU.  
  It accepts GLSL shaders, uniform variables (including textures), and vertexes, then render an image and send it back to clients.
