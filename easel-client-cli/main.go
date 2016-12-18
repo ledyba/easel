@@ -111,8 +111,8 @@ func main() {
 				log.Fatal(err)
 			}
 			log.Infof("Rendered: (%s > %s) %s", presp.EaselId, presp.PaletteId, fname)
-			outFilename := "%s.out.png"
-			err = ioutil.WriteFile(fmt.Sprintf(outFilename, strings.TrimSuffix(fname, path.Ext(fname))), output, os.ModePerm)
+			outFilename := fmt.Sprintf("%s.out.png", strings.TrimSuffix(fname, path.Ext(fname)))
+			err = ioutil.WriteFile(outFilename, output, os.ModePerm)
 			if err != nil {
 				log.Fatal(err)
 			}
