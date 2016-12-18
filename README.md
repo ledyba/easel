@@ -15,10 +15,16 @@ This library lets machines w/o GPU utilize GPU power via [grpc](http://www.grpc.
 
 ## Implementation
 
- - [/client-cli](./client-cli): the entrypoint of "client-cli" executable.
- - [/client-daemon](./client-daemon): the entrypoint of "client-daemon" executable.
- - [/image-filters](./image-filters): GLSL shaders. Currently, there is a [lanczos10 filter](https://github.com/ledyba/easel/blob/master/image-filters/lanczos.go) only.
- - [/proto](./proto):
+[/client-cli](./client-cli): the entrypoint of "client-cli" executable.  
+[/client-daemon](./client-daemon): the entrypoint of "client-daemon" executable.  
+[/server](./server) the entrypoint of "server" executable.  
+
+[/image-filters](./image-filters): GLSL shaders. Currently, there is only a [lanczos10 filter](https://github.com/ledyba/easel/blob/master/image-filters/lanczos.go).  
+[/server-impl](./server-impl):  
+[/proto](./proto): grpc definitions.  
+[/util](./util): utility functions.
+
+[/test-images](./test-images): image materials for testing.  
 
 ## Known Issues
 
