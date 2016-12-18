@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net"
 	"runtime"
 
@@ -25,13 +24,13 @@ func init() {
 }
 
 /* Serving */
-var port = flag.Int("port", 3000, "port to listen")
+var listen = flag.String("listen", ":3000", "listen addr")
 
 /* General */
 var help *bool = flag.Bool("help", false, "Print help and exit")
 
 func startServer(lis net.Listener, em *impl.EaselMaker) {
-	log.Infof("Now listen at :%d", *port)
+	log.Infof("Now listen at %s", *listen)
 	gserver := grpc.NewServer()
 	server := impl.NewServer(em)
 	go server.StartGC()
@@ -57,7 +56,7 @@ func main() {
 
 	printStartupBanner()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	lis, err := net.Listen("tcp", *listen)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
