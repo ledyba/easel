@@ -4,14 +4,14 @@
 
 In our datacenter, there are two kinds of machines. Machines with GPU, and those without GPU.
 
-This library lets machines w/o GPU utilize GPU power via [grpc](http://www.grpc.io/) protocol.
+This library lets machines w/o GPU utilize remote GPU power via [grpc](http://www.grpc.io/) protocol.
 
 ## Sketch
 
- - [Server](./server) will be installed to machines **with** GPU.  
- It accepts GLSL shaders, uniform variables (including textures), and vertexes and execute it.
- - [Client CLI](./client-cli) is a client implementation
- - [Client Daemon](./client-daemon)
+ - [Server](./server) must be installed to machines **with** GPU.  
+ It accepts GLSL shaders, uniform variables (including textures), and vertexes for rendering.
+ - [Client CLI](./client-cli) is a CLI version of client implementation.
+ - [Client Daemon](./client-daemon) is a daemon version of client implementation. It monitors a [SQL table](https://github.com/ledyba/easel/blob/master/client-daemon/db.sql) and process images according to table entries. This daemon could be useful for PHP front-ends.
 
 ## Implementation
 
