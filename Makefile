@@ -37,7 +37,7 @@ bin/client-cli: proto/easel_service.pb.go $(shell find client-cli image-filters 
 
 bin/client-daemon: proto/easel_service.pb.go $(shell find client-daemon image-filters proto util -type f -name '*.go')
 	@mkdir -p bin
-	GOOS=linux GOARCH=amd64 go build -o bin.linux/client-daemon \
+	GOOS=linux GOARCH=amd64 go build -o bin/client-daemon \
 					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
 					"github.com/ledyba/easel/client-daemon"
 

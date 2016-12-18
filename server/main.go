@@ -24,7 +24,11 @@ func init() {
 	runtime.LockOSThread()
 }
 
+/* Serving */
 var port = flag.Int("port", 3000, "port to listen")
+
+/* General */
+var help *bool = flag.Bool("help", false, "Print help and exit")
 
 func startServer(lis net.Listener, em *impl.EaselMaker) {
 	log.Infof("Now listen at :%d", *port)
@@ -36,6 +40,13 @@ func startServer(lis net.Listener, em *impl.EaselMaker) {
 }
 
 func main() {
+	printLogo()
+	flag.Parse()
+	if *help {
+		flag.Usage()
+		return
+	}
+
 	var err error
 	err = glfw.Init()
 	if err != nil {

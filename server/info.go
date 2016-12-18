@@ -5,7 +5,7 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
-func printStartupBanner() {
+func printLogo() {
 	log.Info("****************************************")
 	log.Info("         ___  ___  ___  ___ (         ")
 	log.Info("        |___)|   )|___ |___)|         ")
@@ -14,6 +14,9 @@ func printStartupBanner() {
 	log.Infof("Build at: %s", BuildAt())
 	log.Infof("Git Revision: \n%s", DecodeGitRev())
 	log.Info("****************************************")
+}
+
+func printStartupBanner() {
 	log.Info("  <<GLFW>>")
 	log.Infof("    Version: %s", glfw.GetVersionString())
 	mons := glfw.GetMonitors()

@@ -40,4 +40,54 @@ This library lets machines w/o GPU utilize GPU power via [grpc](http://www.grpc.
 
 ### Server
 
-### Client
+#### Command line flags
+```
+% ./bin/server -h
+Usage of ./bin/server:
+ -help
+     Print help and exit
+ -port int
+     port to listen (default 3000)
+```
+
+### Client Daemon
+
+#### Command line flags
+
+```
+% ./client-daemon -h
+Usage of ./client-daemon:
+  -db string
+    	db address (default "user:password@tcp(host:port)/dbname")
+  -filter string
+    	applied filter name. (default "lanczos")
+  -filter_lobes int
+    	lobes parameter (default 10)
+  -help
+    	Print help and exit
+  -server string
+    	server to connect (default "localhost:3000")
+  -workers int
+    	workers to run (default 10)
+```
+
+### Client CLI
+
+#### Command line flags
+
+```
+% ./bin/client-cli -h
+Usage of ./bin/client-cli:
+  -filter string
+    	applied filter name. (default "lanczos")
+  -filter_lobes int
+    	lobes parameter (default 10)
+  -help
+    	Print help and exit
+  -quality float
+    	quality (default 95)
+  -scale float
+    	scale (default 2)
+  -server string
+    	server to connect (default "localhost:3000")
+```
