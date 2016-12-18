@@ -1,6 +1,6 @@
 .PHONY: all linux test inst cl clean
 
-GIT_REV=$(shell git log -1 | base64)
+GIT_REV=$(shell git log -1 | base64 | tr -d '[:space:]')
 NOW=$(shell date -u "+%Y/%m/%d %H:%M:%S")
 
 all: \
