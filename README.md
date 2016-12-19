@@ -95,7 +95,7 @@ Usage of ./easel-server:
   -help
     	Print help and exit
   -listen string
-    	listen addr (default ":3000")```
+    	listen addr (default ":3000")
 ```
 
 ```
@@ -153,7 +153,7 @@ easel-client-daemon \
     -cert=client.crt \
     -cert_key=cert.key \
     -db="test:hoge@tcp(localhost:3306)/easel" \
-    -server="192.168.0.100:3000"
+    -server="192.168.0.10:3000"
 ```
 
 ### Client CLI
