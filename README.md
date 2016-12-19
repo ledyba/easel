@@ -6,9 +6,9 @@ In our datacenter, there are two kinds of machines. Machines **with GPU**, and t
 
 This library lets machines w/o GPU utilize remote GPU power via [grpc](http://www.grpc.io/) protocol.
 
-## Sketch
+## Croquis
 
-![design sketch](./sketch.jpg)
+![design croquis](./croquis.jpg)
 
  - [Server](./server) must be installed to machines **with** GPU.  
  It accepts GLSL shaders, uniform variables (including textures), and vertexes, then render an image and send it back to clients.
