@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"image"
@@ -17,10 +18,13 @@ import (
 	"github.com/ledyba/easel/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 /* Server to work with */
 var server *string = flag.String("server", "localhost:3000", "server to connect")
+var cert = flag.String("cert", "", "cert file")
+var certKey = flag.String("cert_key", "", "private key file")
 
 /* Filter Flags */
 var filter *string = flag.String("filter", "lanczos", "applied filter name.")
@@ -49,7 +53,22 @@ func main() {
 		return
 	}
 	var err error
-	conn, err := grpc.Dial(*server, grpc.WithInsecure())
+	var dialOpt grpc.DialOption
+	if len(*cert) > 0 && len(*certKey) > 0 {
+		var cred tls.Certificate
+		cred, err = tls.LoadX509KeyPair(*cert, *certKey)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Info("Auth with x509:")
+		log.Infof("    cert: %s", *cert)
+		log.Infof("     key: %s", *certKey)
+		dialOpt = grpc.WithTransportCredentials(credentials.NewServerTLSFromCert(&cred))
+	} else {
+		log.Warn("No keypair provided. Insecure.")
+		dialOpt = grpc.WithInsecure()
+	}
+	conn, err := grpc.Dial(*server, dialOpt)
 	if err != nil {
 		log.Fatal(err)
 	}

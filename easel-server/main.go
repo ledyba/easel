@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"net"
 	"runtime"
@@ -8,6 +9,7 @@ import (
 	"github.com/ledyba/easel/proto"
 	impl "github.com/ledyba/easel/server-impl"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	_ "image/gif"
 	_ "image/jpeg"
@@ -25,16 +27,34 @@ func init() {
 
 /* Serving */
 var listen = flag.String("listen", ":3000", "listen addr")
+var cert = flag.String("cert", "", "cert file")
+var certKey = flag.String("cert_key", "", "private key file")
 
 /* General */
 var help *bool = flag.Bool("help", false, "Print help and exit")
 
 func startServer(lis net.Listener, em *impl.EaselMaker) {
-	log.Infof("Now listen at %s", *listen)
-	gserver := grpc.NewServer()
+	var err error
+	var gserver *grpc.Server
+	if len(*cert) > 0 && len(*certKey) > 0 {
+		var cred tls.Certificate
+		cred, err = tls.LoadX509KeyPair(*cert, *certKey)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Info("Auth with x509:")
+		log.Infof("    cert: %s", *cert)
+		log.Infof("     key: %s", *certKey)
+		gserver = grpc.NewServer(grpc.Creds(credentials.NewServerTLSFromCert(&cred)))
+	} else {
+		log.Warn("No keypair provided. Insecure.")
+		gserver = grpc.NewServer()
+	}
+
 	server := impl.NewServer(em)
 	go server.StartGC()
 	proto.RegisterEaselServiceServer(gserver, server)
+	log.Infof("Now listen at %s", *listen)
 	gserver.Serve(lis)
 }
 

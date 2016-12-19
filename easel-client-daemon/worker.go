@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"image"
 	"sync/atomic"
@@ -12,6 +13,7 @@ import (
 	"github.com/ledyba/easel/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Worker ...
@@ -47,7 +49,22 @@ func newWorker() *Worker {
 
 func (w *Worker) connect() error {
 	var err error
-	w.conn, err = grpc.Dial(*server, grpc.WithInsecure())
+	var dialOpt grpc.DialOption
+	if len(*cert) > 0 && len(*certKey) > 0 {
+		var cred tls.Certificate
+		cred, err = tls.LoadX509KeyPair(*cert, *certKey)
+		if err != nil {
+			return err
+		}
+		log.Info("Auth with x509:")
+		log.Infof("    cert: %s", *cert)
+		log.Infof("     key: %s", *certKey)
+		dialOpt = grpc.WithTransportCredentials(credentials.NewServerTLSFromCert(&cred))
+	} else {
+		log.Warn("No keypair provided. Insecure.")
+		dialOpt = grpc.WithInsecure()
+	}
+	w.conn, err = grpc.Dial(*server, dialOpt)
 	if err != nil {
 		return err
 	}

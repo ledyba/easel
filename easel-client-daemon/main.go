@@ -23,6 +23,9 @@ const (
 
 /* Server to work with */
 var server *string = flag.String("server", "localhost:3000", "server to connect")
+var cert = flag.String("cert", "", "cert file")
+var certKey = flag.String("cert_key", "", "private key file")
+
 var dbAddr *string = flag.String("db", "user:password@tcp(host:port)/dbname", "db address")
 
 var workers *int = flag.Int("workers", 10, "workers to run")

@@ -34,13 +34,37 @@ This library lets machines w/o GPU utilize remote GPU power via [grpc](http://ww
 
 ## How to run
 
-### Prerequirement
+### Common Prerequirements
 
  - [golang](https://golang.org/): Use latest version.
- - GLFW (for server)
-   - `sudo apt install libglfw3-dev`
 
 ### Server
+
+#### Prerequirements
+
+```bash
+# GLFW
+sudo apt install libglfw3-dev
+#
+go get -u "github.com/go-gl/gl/v4.1-core/gl"
+go get -u "github.com/go-gl/glfw/v3.2/glfw"
+go get -u "github.com/Sirupsen/logrus"
+go get -u "github.com/golang/protobuf/protoc-gen-go"
+go get -u "google.golang.org/grpc"
+go get -u "github.com/chai2010/webp"
+go get -u "github.com/go-sql-driver/mysql"
+```
+
+#### Create Certificates
+
+```bash
+# create self-signed ca
+openssl req -new -x509 -days 3650 -newkey rsa:2048 -nodes -keyout ca.key -out ca.crt
+# create client key
+openssl req -new -newkey rsa:2048 -nodes -keyout client.key -out client.csr
+# sign
+openssl x509 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out client.crt
+```
 
 #### Command line flags
 ```
