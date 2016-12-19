@@ -55,6 +55,24 @@ go get -u "github.com/chai2010/webp"
 go get -u "github.com/go-sql-driver/mysql"
 ```
 
+#### Build
+
+
+```
+go get -u "github.com/ledyba/easel/easel-server"
+```
+
+or, to cross-compile,
+```
+mkdir -p $GOPATH/src/githuc.com/ledyba/
+cd $GOPATH/src/githuc.com/ledyba/
+git clone "git@github.com:ledyba/easel.git"
+cd easel
+GOOS=linux GOARCH=amd64 go build -o easel-server \
+        -ldflags "-X 'main.gitRev=$(git log -1 | base64 | tr -d \'\[\:space\:\]\')' \-X \'main.buildAt=$(date -u "+%Y/%m/%d %H:%M:%S")\'" \
+        "github.com/ledyba/easel/easel-server"
+```
+
 #### Create Certificates
 
 ```bash
@@ -68,42 +86,104 @@ openssl x509 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 
 
 #### Command line flags
 ```
-% ./bin/server -h
-Usage of .bin/easel-server:
+% ./bin/easel-server -h
+Usage of ./easel-server:
+  -cert string
+    	cert file
+  -cert_key string
+    	private key file
   -help
     	Print help and exit
   -listen string
-    	listen addr (default ":3000")
+    	listen addr (default ":3000")```
+```
+
+```
+./easel-server \
+    -cert=server.crt \
+    -cert_key=server.key
+    -listen "192.168.0.10:3000"
 ```
 
 ### Client Daemon
 
+#### Build
+```
+go get -u "github.com/ledyba/easel/easel-client-daemon"
+```
+
+or, to cross-compile,
+```
+mkdir -p $GOPATH/src/githuc.com/ledyba/
+cd $GOPATH/src/githuc.com/ledyba/
+git clone "git@github.com:ledyba/easel.git"
+cd easel
+GOOS=linux GOARCH=amd64 go build -o easel-client-daemon \
+        -ldflags "-X 'main.gitRev=$(git log -1 | base64 | tr -d \'\[\:space\:\]\')' \-X \'main.buildAt=$(date -u "+%Y/%m/%d %H:%M:%S")\'" \
+        "github.com/ledyba/easel/easel-client-daemon"
+```
+
 #### Command line flags
 
 ```
-% ./client-daemon -h
-Usage of ./client-daemon:
-  -db string
-    	db address (default "user:password@tcp(host:port)/dbname")
-  -filter string
-    	applied filter name. (default "lanczos")
-  -filter_lobes int
-    	lobes parameter (default 10)
-  -help
-    	Print help and exit
-  -server string
-    	server to connect (default "localhost:3000")
-  -workers int
-    	workers to run (default 10)
+% ./easel-client-daemon -h
+Usage of ./easel-client-daemon:
+ -cert string
+     cert file
+ -cert_key string
+     private key file
+ -db string
+     db address (default "user:password@tcp(host:port)/dbname")
+ -filter string
+     applied filter name. (default "lanczos")
+ -filter_lobes int
+     lobes parameter (default 10)
+ -help
+     Print help and exit
+ -server string
+     server to connect (default "localhost:3000")
+ -workers int
+     workers to run (default 10)
+```
+
+Example:
+
+```
+easel-client-daemon \
+    -cert=client.crt \
+    -cert_key=cert.key \
+    -db="test:hoge@tcp(localhost:3306)/easel" \
+    -server="192.168.0.100:3000"
 ```
 
 ### Client CLI
 
+#### Build
+```
+go get -u "github.com/ledyba/easel/easel-client-cli"
+```
+
+or, to cross-compile,
+```
+mkdir -p $GOPATH/src/githuc.com/ledyba/
+cd $GOPATH/src/githuc.com/ledyba/
+git clone "git@github.com:ledyba/easel.git"
+cd easel
+GOOS=linux GOARCH=amd64 go build -o easel-client-cli \
+        -ldflags "-X 'main.gitRev=$(git log -1 | base64 | tr -d \'\[\:space\:\]\')' \-X \'main.buildAt=$(date -u "+%Y/%m/%d %H:%M:%S")\'" \
+        "github.com/ledyba/easel/easel-client-cli"
+```
+
+
 #### Command line flags
 
 ```
-% ./bin/client-cli -h
-Usage of ./bin/client-cli:
+% ./easel-client-cli -h
+Usage of ./easel-client-cli:
+  -cert string
+    	cert file
+  -cert_key string
+    	private key file
   -filter string
     	applied filter name. (default "lanczos")
   -filter_lobes int
@@ -116,4 +196,13 @@ Usage of ./bin/client-cli:
     	scale (default 2)
   -server string
     	server to connect (default "localhost:3000")
+```
+
+Example:
+
+```
+./easel-client-cli \
+    -cert=client.crt \
+    -cert_key=cert.key \
+    test-images/momiji.png
 ```
