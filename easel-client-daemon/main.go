@@ -98,14 +98,18 @@ func main() {
 						}
 						output, err = w.render(r)
 						if err != nil {
+							log.Errorf("[%d] rendering failed: %v\n src: %s", w.name, err, r.src)
 							r.err = err
 							notifyQueue <- r
 						} else {
 							err = ioutil.WriteFile(r.dst, output, os.ModePerm)
+							log.Errorf("[%d] rendered successfully, but could not write file: %v\n src: %s", w.name, err, r.src)
 							if err != nil {
+								log.Errorf("[%d] rendered successfully, but could not write file: %v\n src: %s", w.name, err, r.src)
 								r.err = err
 								notifyQueue <- r
 							} else {
+								log.Errorf("[%d] Well done!\n  src: %s\n  dst: %s", w.name, r.src, r.dst)
 								notifyQueue <- r
 							}
 						}
@@ -155,6 +159,7 @@ func main() {
 								c, _ := q.RowsAffected()
 								ok := c == 1
 								if ok {
+									log.Infof("Request fetched. \n  src: %s\n  dst: %s", r.src, r.dst)
 									requestQueue <- &r
 								}
 							}
@@ -162,19 +167,6 @@ func main() {
 						})()
 						if err != nil {
 							return
-						}
-					case r := <-requestQueue:
-						if r.err == nil {
-							var q sql.Result
-							q, err = db.Exec("update EaselRequest SET `status`=2 where `id`=?", r.id)
-							if err != nil {
-								log.Errorf("Error on selecting db: %v", err)
-								break
-							}
-							c, _ := q.RowsAffected()
-							if c == 1 {
-								log.Errorf("Error on writing db: %v", err)
-							}
 						}
 					}
 				}
@@ -198,16 +190,30 @@ func main() {
 					select {
 					case r := <-notifyQueue:
 						var q sql.Result
-						if r.err != nil {
-							q, err = db.Exec("update `resample_requests` SET `status`=? where `id`=?", reqStatusDone, r.id)
+						if r.err == nil {
+							q, err = db.Exec("update EaselRequest SET `status`=2 where `id`=?", r.id)
+							if err != nil {
+								log.Errorf("Error on selecting db: %v", err)
+								break
+							}
+							c, _ := q.RowsAffected()
+							if c == 1 {
+								log.Errorf("Error on writing db: %v", err)
+							} else {
+								log.Infof("Request updated. status=done. \n  src: %s\n  dst: %s", r.src, r.dst)
+							}
 						} else {
-							q, err = db.Exec("update `resample_requests` SET `status`=?, `message`=? where `id`=?", reqStatusError, r.err.Error(), r.id)
+							q, err = db.Exec("update EaselRequest SET `status`=3 where `id`=?", r.id)
+							if err != nil {
+								log.Errorf("Error on selecting db: %v", err)
+								break
+							}
+							c, _ := q.RowsAffected()
+							if c == 1 {
+								log.Errorf("Error on writing db: %v", err)
+							} else {
+							}
 						}
-						if err != nil {
-							log.Errorf("Error on selecting db: %v", err)
-							return
-						}
-						q.RowsAffected()
 					}
 				}
 			})()
