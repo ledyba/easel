@@ -128,7 +128,7 @@ func main() {
 					select {
 					case <-timer.C:
 						err = (func() error {
-							rows, err = db.Query("select `id`,`src`,`dst`,`dst_width`,`dst_height`,`dst_quality` from ResampleRequest where status = ?", reqStatusEnqueued)
+							rows, err = db.Query("select `id`,`src`,`dst`,`dst_width`,`dst_height`,`dst_quality` from `resample_requests` where status = ?", reqStatusEnqueued)
 							if err != nil {
 								log.Errorf("Error on selecting db: %v", err)
 								return err
@@ -142,7 +142,7 @@ func main() {
 									return err
 								}
 								var q sql.Result
-								q, err = db.Exec("update ResampleRequest SET `status`=? where `id`=? and `status`=?", reqStatusInProgress, r.id, reqStatusEnqueued)
+								q, err = db.Exec("update `resample_requests` SET `status`=? where `id`=? and `status`=?", reqStatusInProgress, r.id, reqStatusEnqueued)
 								if err != nil {
 									log.Errorf("Error on selecting db: %v", err)
 									return err
@@ -194,9 +194,9 @@ func main() {
 					case r := <-notifyQueue:
 						var q sql.Result
 						if r.err != nil {
-							q, err = db.Exec("update ResampleRequest SET `status`=? where `id`=?", reqStatusDone, r.id)
+							q, err = db.Exec("update `resample_requests` SET `status`=? where `id`=?", reqStatusDone, r.id)
 						} else {
-							q, err = db.Exec("update ResampleRequest SET `status`=?, `message`=? where `id`=?", reqStatusError, r.err.Error(), r.id)
+							q, err = db.Exec("update `resample_requests` SET `status`=?, `message`=? where `id`=?", reqStatusError, r.err.Error(), r.id)
 						}
 						if err != nil {
 							log.Errorf("Error on selecting db: %v", err)
