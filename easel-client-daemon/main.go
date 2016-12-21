@@ -128,7 +128,7 @@ func main() {
 					select {
 					case <-timer.C:
 						err = (func() error {
-							rows, err = db.Query("select `id`,`src`,`dst`,`dst_width`,`dst_height`,`dst_quality` from ResampleRequest where status = %d", reqStatusEnqueued)
+							rows, err = db.Query("select `id`,`src`,`dst`,`dst_width`,`dst_height`,`dst_quality` from ResampleRequest where status = ?", reqStatusEnqueued)
 							if err != nil {
 								log.Errorf("Error on selecting db: %v", err)
 								return err
