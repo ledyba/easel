@@ -113,12 +113,22 @@ func (w *Worker) render(req *ResampleRequest) ([]byte, error) {
 	var output []byte
 	var input []byte
 	var src image.Image
+	input, src, err = util.LoadImage(req.src)
+	if err != nil {
+		return nil, err
+	}
+	srcWidth := src.Bounds().Dx()
+	srcHeight := src.Bounds().Dy()
+	if req.dstHeight < 0 && req.dstWidth < 0 {
+		return nil, fmt.Errorf("Either dstHeight or dstWidth, or both must be specified.")
+	} else if req.dstHeight < 0 {
+		req.dstHeight = srcHeight * req.dstWidth / srcWidth
+	} else if req.dstWidth < 0 {
+		req.dstWidth = srcWidth * req.dstHeight / srcHeight
+	}
+
 	switch *filter {
 	case filters.LanczosFilter:
-		input, src, err = util.LoadImage(req.src)
-		if err != nil {
-			return nil, err
-		}
 		output, err = filters.RenderLanczos(w.server, w.easelID, w.paletteID, input, src, req.dstWidth, req.dstHeight, req.dstQuality)
 		if err != nil {
 			return nil, err
