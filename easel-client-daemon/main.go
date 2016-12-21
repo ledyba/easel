@@ -96,6 +96,7 @@ func main() {
 							log.Infof("[%d] buffer closed", w.name)
 							return
 						}
+						log.Errorf("[%d] Start rendering: %v\n src: %s", w.name, err, r.src)
 						output, err = w.render(r)
 						if err != nil {
 							log.Errorf("[%d] rendering failed: %v\n src: %s", w.name, err, r.src)
@@ -103,13 +104,12 @@ func main() {
 							notifyQueue <- r
 						} else {
 							err = ioutil.WriteFile(r.dst, output, os.ModePerm)
-							log.Errorf("[%d] rendered successfully, but could not write file: %v\n src: %s", w.name, err, r.src)
 							if err != nil {
 								log.Errorf("[%d] rendered successfully, but could not write file: %v\n src: %s", w.name, err, r.src)
 								r.err = err
 								notifyQueue <- r
 							} else {
-								log.Errorf("[%d] Well done!\n  src: %s\n  dst: %s", w.name, r.src, r.dst)
+								log.Infof("[%d] Well done!\n  src: %s\n  dst: %s", w.name, r.src, r.dst)
 								notifyQueue <- r
 							}
 						}
@@ -191,9 +191,9 @@ func main() {
 					case r := <-notifyQueue:
 						var q sql.Result
 						if r.err == nil {
-							q, err = db.Exec("update EaselRequest SET `status`=2 where `id`=?", r.id)
+							q, err = db.Exec("update `resample_requests` SET `status`=2 where `id`=?", r.id)
 							if err != nil {
-								log.Errorf("Error on selecting db: %v", err)
+								log.Errorf("Error on updating db: %v", err)
 								break
 							}
 							c, _ := q.RowsAffected()
@@ -203,9 +203,9 @@ func main() {
 								log.Infof("Request updated. status=done. \n  src: %s\n  dst: %s", r.src, r.dst)
 							}
 						} else {
-							q, err = db.Exec("update EaselRequest SET `status`=3 where `id`=?", r.id)
+							q, err = db.Exec("update `resample_requests` SET `status`=3 where `id`=?", r.id)
 							if err != nil {
-								log.Errorf("Error on selecting db: %v", err)
+								log.Errorf("Error on updating db: %v", err)
 								break
 							}
 							c, _ := q.RowsAffected()
