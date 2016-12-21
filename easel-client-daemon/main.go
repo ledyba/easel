@@ -101,8 +101,13 @@ func main() {
 							r.err = err
 							notifyQueue <- r
 						} else {
-							ioutil.WriteFile(r.dst, output, os.ModePerm)
-							notifyQueue <- r
+							err = ioutil.WriteFile(r.dst, output, os.ModePerm)
+							if err != nil {
+								r.err = err
+								notifyQueue <- r
+							} else {
+								notifyQueue <- r
+							}
 						}
 					}
 				}
