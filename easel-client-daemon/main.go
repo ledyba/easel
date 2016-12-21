@@ -93,23 +93,23 @@ func main() {
 					select {
 					case r, ok := <-requestQueue:
 						if !ok {
-							log.Infof("[%d] buffer closed", w.name)
+							log.Errorf("[%d] Buffer closed.", w.name)
 							return
 						}
-						log.Errorf("[%d] Start rendering: %v\n src: %s", w.name, err, r.src)
+						log.Infof("[%d] Start rendering. reqID=%d\n  src: %s\n  dst: %s", w.name, r.id, r.src, r.dst)
 						output, err = w.render(r)
 						if err != nil {
-							log.Errorf("[%d] rendering failed: %v\n src: %s", w.name, err, r.src)
+							log.Errorf("[%d] Rendering failed. reqID=%d\n  src: %s\n  dst: %s\n  err: %v", w.name, r.id, r.src, r.dst, err)
 							r.err = err
 							notifyQueue <- r
 						} else {
 							err = ioutil.WriteFile(r.dst, output, os.ModePerm)
 							if err != nil {
-								log.Errorf("[%d] rendered successfully, but could not write file: %v\n src: %s", w.name, err, r.src)
+								log.Errorf("[%d] Rendered successfully, but could not write file. reqID=%d\n  src: %s\n  dst: %s\n err: %v", w.name, r.id, r.src, r.dst, err)
 								r.err = err
 								notifyQueue <- r
 							} else {
-								log.Infof("[%d] Well done!\n  src: %s\n  dst: %s", w.name, r.src, r.dst)
+								log.Infof("[%d] Well done! reqID=%d\n  src: %s\n  dst: %s", w.name, r.id, r.src, r.dst)
 								notifyQueue <- r
 							}
 						}
@@ -119,7 +119,7 @@ func main() {
 		case <-fetcherRestartChan:
 			go (func() {
 				defer (func() {
-					log.Errorf("DB Fetcher disconnected. Retry in 5 secs...")
+					log.Error("DB Fetcher disconnected. Retry in 5 secs...")
 					time.Sleep(5 * time.Second)
 					fetcherRestartChan <- true
 				})()
@@ -147,21 +147,21 @@ func main() {
 							for rows.Next() {
 								err = rows.Scan(&r.id, &r.src, &r.dst, &r.dstWidth, &r.dstHeight, &r.dstQuality)
 								if err != nil {
-									log.Errorf("Error on selecting db: %v", err)
+									log.Errorf("Error on scanning db: %v", err)
 									return err
 								}
 								var q sql.Result
 								q, err = db.Exec("update `resample_requests` SET `status`=? where `id`=? and `status`=?", reqStatusInProgress, r.id, reqStatusEnqueued)
 								if err != nil {
-									log.Errorf("Error on selecting db: %v", err)
+									log.Errorf("Error on updating db: %v", err)
 									return err
 								}
 								c, _ := q.RowsAffected()
 								if c == 1 {
-									log.Infof("Request fetched. \n  src: %s\n  dst: %s", r.src, r.dst)
+									log.Infof("Request fetched. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 									requestQueue <- &r
 								} else {
-									log.Warnf("Request is stealed by anyone else. \n  src: %s\n  dst: %s", r.src, r.dst)
+									log.Warnf("Request is stealed by anyone else. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 								}
 							}
 							return nil
@@ -201,7 +201,7 @@ func main() {
 							if c == 1 {
 								log.Infof("Request updated. status=done. \n  src: %s\n  dst: %s", r.src, r.dst)
 							} else {
-								log.Infof("Request already updated by anyone else. \n  src: %s\n  dst: %s", r.src, r.dst)
+								log.Warnf("Request already updated by anyone else. \n  src: %s\n  dst: %s", r.src, r.dst)
 							}
 						} else {
 							q, err = db.Exec("update `resample_requests` SET `status`=3 where `id`=?", r.id)
@@ -213,7 +213,7 @@ func main() {
 							if c == 1 {
 								log.Infof("Request updated. status=err. \n  src: %s\n  dst: %s", r.src, r.dst)
 							} else {
-								log.Infof("Request already updated by anyone else. \n  src: %s\n  dst: %s", r.src, r.dst)
+								log.Warnf("Request already updated by anyone else. \n  src: %s\n  dst: %s", r.src, r.dst)
 							}
 						}
 					}
