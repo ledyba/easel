@@ -22,20 +22,20 @@ const (
 )
 
 /* Server to work with */
-var server *string = flag.String("server", "localhost:3000", "server to connect")
+var server = flag.String("server", "localhost:3000", "server to connect")
 var cert = flag.String("cert", "", "cert file")
 var certKey = flag.String("cert_key", "", "private key file")
 
-var dbAddr *string = flag.String("db", "user:password@tcp(host:port)/dbname", "db address")
+var dbAddr = flag.String("db", "user:password@tcp(host:port)/dbname", "db address")
 
-var workers *int = flag.Int("workers", 10, "workers to run")
+var workers = flag.Int("workers", 10, "workers to run")
 
 /* Filter Flags */
-var filter *string = flag.String("filter", "lanczos", "applied filter name.")
-var lobes *int = flag.Int("filter_lobes", 10, "lobes parameter")
+var filter = flag.String("filter", "lanczos", "applied filter name.")
+var lobes = flag.Int("filter_lobes", 10, "lobes parameter")
 
 /* General */
-var help *bool = flag.Bool("help", false, "Print help and exit")
+var help = flag.Bool("help", false, "Print help and exit")
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `
@@ -157,10 +157,11 @@ func main() {
 									return err
 								}
 								c, _ := q.RowsAffected()
-								ok := c == 1
-								if ok {
+								if c == 1 {
 									log.Infof("Request fetched. \n  src: %s\n  dst: %s", r.src, r.dst)
 									requestQueue <- &r
+								} else {
+									log.Warnf("Request is stealed by anyone else. \n  src: %s\n  dst: %s", r.src, r.dst)
 								}
 							}
 							return nil
@@ -198,9 +199,9 @@ func main() {
 							}
 							c, _ := q.RowsAffected()
 							if c == 1 {
-								log.Errorf("Error on writing db: %v", err)
-							} else {
 								log.Infof("Request updated. status=done. \n  src: %s\n  dst: %s", r.src, r.dst)
+							} else {
+								log.Infof("Request already updated by anyone else. \n  src: %s\n  dst: %s", r.src, r.dst)
 							}
 						} else {
 							q, err = db.Exec("update `resample_requests` SET `status`=3 where `id`=?", r.id)
@@ -210,8 +211,9 @@ func main() {
 							}
 							c, _ := q.RowsAffected()
 							if c == 1 {
-								log.Errorf("Error on writing db: %v", err)
+								log.Infof("Request updated. status=err. \n  src: %s\n  dst: %s", r.src, r.dst)
 							} else {
+								log.Infof("Request already updated by anyone else. \n  src: %s\n  dst: %s", r.src, r.dst)
 							}
 						}
 					}

@@ -22,18 +22,18 @@ import (
 )
 
 /* Server to work with */
-var server *string = flag.String("server", "localhost:3000", "server to connect")
+var server = flag.String("server", "localhost:3000", "server to connect")
 var cert = flag.String("cert", "", "cert file")
 var certKey = flag.String("cert_key", "", "private key file")
 
 /* Filter Flags */
-var filter *string = flag.String("filter", "lanczos", "applied filter name.")
-var lobes *int = flag.Int("filter_lobes", 10, "lobes parameter")
-var scale *float64 = flag.Float64("scale", 2.0, "scale")
-var quality *float64 = flag.Float64("quality", 95.0, "quality")
+var filter = flag.String("filter", "lanczos", "applied filter name.")
+var lobes = flag.Int("filter_lobes", 10, "lobes parameter")
+var scale = flag.Float64("scale", 2.0, "scale")
+var quality = flag.Float64("quality", 95.0, "quality")
 
 /* General */
-var help *bool = flag.Bool("help", false, "Print help and exit")
+var help = flag.Bool("help", false, "Print help and exit")
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `

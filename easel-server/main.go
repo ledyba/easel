@@ -31,7 +31,7 @@ var cert = flag.String("cert", "", "cert file")
 var certKey = flag.String("cert_key", "", "private key file")
 
 /* General */
-var help *bool = flag.Bool("help", false, "Print help and exit")
+var help = flag.Bool("help", false, "Print help and exit")
 
 func startServer(lis net.Listener, em *impl.EaselMaker) {
 	var err error
