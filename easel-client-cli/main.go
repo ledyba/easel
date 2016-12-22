@@ -31,6 +31,7 @@ var filter = flag.String("filter", "lanczos", "applied filter name.")
 var lobes = flag.Int("filter_lobes", 10, "lobes parameter")
 var scale = flag.Float64("scale", 2.0, "scale")
 var quality = flag.Float64("quality", 95.0, "quality")
+var mimeType = flag.String("mime_type", "image/png", "output format. One of: ['image/png', 'image/jpg', 'image/webp']")
 
 /* General */
 var help = flag.Bool("help", false, "Print help and exit")
@@ -125,7 +126,7 @@ func main() {
 			}
 			widthf := *scale * float64(src.Bounds().Dx())
 			heightf := *scale * float64(src.Bounds().Dy())
-			output, err = filters.RenderLanczos(serv, presp.EaselId, presp.PaletteId, input, src, int(widthf), int(heightf), float32(*quality))
+			output, err = filters.RenderLanczos(serv, presp.EaselId, presp.PaletteId, input, src, int(widthf), int(heightf), float32(*quality), *mimeType)
 			if err != nil {
 				log.Fatal(err)
 			}

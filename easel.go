@@ -31,13 +31,13 @@ func NewEasel() *Easel {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Infof("Easel Created.")
-	log.Infof("  ** OpenGL Info **")
-	log.Infof("    OpenGL Version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
-	log.Infof("    GLSL Version:   %s", gl.GoStr(gl.GetString(gl.SHADING_LANGUAGE_VERSION)))
-	log.Infof("    OpenGL Vendor:  %s", gl.GoStr(gl.GetString(gl.VENDOR)))
-	log.Infof("    Renderer:       %s", gl.GoStr(gl.GetString(gl.RENDERER)))
-	log.Infof("    ** Extensions **")
+	log.Debugf("Easel Created.")
+	log.Debugf("  ** OpenGL Info **")
+	log.Debugf("    OpenGL Version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
+	log.Debugf("    GLSL Version:   %s", gl.GoStr(gl.GetString(gl.SHADING_LANGUAGE_VERSION)))
+	log.Debugf("    OpenGL Vendor:  %s", gl.GoStr(gl.GetString(gl.VENDOR)))
+	log.Debugf("    Renderer:       %s", gl.GoStr(gl.GetString(gl.RENDERER)))
+	log.Debugf("    ** Extensions **")
 	for i := uint32(0); i < gl.NUM_EXTENSIONS; i++ {
 		str := gl.GetStringi(gl.EXTENSIONS, i)
 		code := gl.GetError()
@@ -45,11 +45,9 @@ func NewEasel() *Easel {
 			break
 		}
 		if str != nil {
-			log.Infof("      - %s", gl.GoStr(str))
+			log.Debugf("      - %s", gl.GoStr(str))
 		}
 	}
-
-	log.Debug("Easel Created.")
 	return &Easel{
 		window: w,
 	}

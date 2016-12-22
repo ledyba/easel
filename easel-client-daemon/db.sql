@@ -5,6 +5,7 @@ CREATE TABLE `resample_requests` (
 `dst_width` int(10) unsigned NOT NULL,
 `dst_height` int(10) unsigned NOT NULL,
 `dst_quality` double unsigned NOT NULL,
+`dst_mimetype` varchar(1024) NOT NULL,
 `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 `updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 `status` tinyint(1) unsigned NOT NULL COMMENT '0=enqueued, 1=in progress, 2=done, 3=error',

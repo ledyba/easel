@@ -14,7 +14,7 @@ linux: \
 	.bin.linux/easel-server
 
 test:
-	go test .
+	go test "github.com/ledyba/easel/..."
 
 inst:
 	go get -u "github.com/go-gl/gl/v4.1-core/gl"

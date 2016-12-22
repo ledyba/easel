@@ -27,14 +27,15 @@ type Worker struct {
 
 // ResampleRequest ...
 type ResampleRequest struct {
-	id         int
-	src        string
-	dst        string
-	dstWidth   int
-	dstHeight  int
-	dstQuality float32
-	status     int
-	err        error
+	id          int
+	src         string
+	dst         string
+	dstWidth    int
+	dstHeight   int
+	dstQuality  float32
+	dstMimeType string
+	status      int
+	err         error
 }
 
 var workerCount int32
@@ -129,7 +130,7 @@ func (w *Worker) render(req *ResampleRequest) ([]byte, error) {
 
 	switch *filter {
 	case filters.LanczosFilter:
-		output, err = filters.RenderLanczos(w.server, w.easelID, w.paletteID, input, src, req.dstWidth, req.dstHeight, req.dstQuality)
+		output, err = filters.RenderLanczos(w.server, w.easelID, w.paletteID, input, src, req.dstWidth, req.dstHeight, req.dstQuality, req.dstMimeType)
 		if err != nil {
 			return nil, err
 		}

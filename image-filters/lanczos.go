@@ -125,11 +125,11 @@ func UpdateLanczos(serv proto.EaselServiceClient, easelID, paletteID string, lob
 }
 
 // RenderLanczos ...
-func RenderLanczos(serv proto.EaselServiceClient, easelID, paletteID string, data []byte, src image.Image, width, height int, quality float32) ([]byte, error) {
+func RenderLanczos(serv proto.EaselServiceClient, easelID, paletteID string, data []byte, src image.Image, width, height int, quality float32, mimeType string) ([]byte, error) {
 	resp, err := serv.Render(context.Background(), &proto.RenderRequest{
 		EaselId:    easelID,
 		PaletteId:  paletteID,
-		OutFormat:  "image/png",
+		OutFormat:  mimeType,
 		OutQuality: quality,
 		OutWidth:   int32(width),
 		OutHeight:  int32(height),

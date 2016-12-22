@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -404,6 +405,7 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 			return nil, err
 		}
 	case "image/jpeg":
+		fallthrough
 	case "image/jpg":
 		err = jpeg.Encode(writer, img, &jpeg.Options{
 			Quality: int(req.OutQuality),
@@ -418,6 +420,8 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 		if err != nil {
 			return nil, err
 		}
+	default:
+		err = fmt.Errorf("Unknown mime-type: %s", req.OutFormat)
 	}
 	err = writer.Flush()
 	if err != nil {

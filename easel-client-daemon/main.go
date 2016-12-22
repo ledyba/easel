@@ -137,7 +137,7 @@ func main() {
 					select {
 					case <-timer.C:
 						err = (func() error {
-							rows, err = db.Query("select `id`,`src`,`dst`,`dst_width`,`dst_height`,`dst_quality` from `resample_requests` where status = ?", reqStatusEnqueued)
+							rows, err = db.Query("select `id`,`src`,`dst`,`dst_width`,`dst_height`,`dst_quality`,`dst_mimetype` from `resample_requests` where status = ?", reqStatusEnqueued)
 							if err != nil {
 								log.Errorf("Error on selecting db: %v", err)
 								return err
@@ -145,7 +145,7 @@ func main() {
 							r := ResampleRequest{}
 							defer rows.Close()
 							for rows.Next() {
-								err = rows.Scan(&r.id, &r.src, &r.dst, &r.dstWidth, &r.dstHeight, &r.dstQuality)
+								err = rows.Scan(&r.id, &r.src, &r.dst, &r.dstWidth, &r.dstHeight, &r.dstQuality, &r.dstMimeType)
 								if err != nil {
 									log.Errorf("Error on scanning db: %v", err)
 									return err
