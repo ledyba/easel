@@ -142,9 +142,9 @@ func main() {
 								log.Errorf("Error on selecting db: %v", err)
 								return err
 							}
-							r := ResampleRequest{}
 							defer rows.Close()
 							for rows.Next() {
+								r := ResampleRequest{}
 								err = rows.Scan(&r.id, &r.src, &r.dst, &r.dstWidth, &r.dstHeight, &r.dstQuality, &r.dstMimeType)
 								if err != nil {
 									log.Errorf("Error on scanning db: %v", err)
@@ -199,9 +199,9 @@ func main() {
 							}
 							c, _ := q.RowsAffected()
 							if c == 1 {
-								log.Infof("Request updated. status=done. \n  src: %s\n  dst: %s", r.src, r.dst)
+								log.Infof("Request updated. reqID=%d status=done. \n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 							} else {
-								log.Warnf("Request already updated by anyone else. \n  src: %s\n  dst: %s", r.src, r.dst)
+								log.Warnf("Request already updated by anyone else. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 							}
 						} else {
 							q, err = db.Exec("update `resample_requests` SET `status`=3 where `id`=?", r.id)
@@ -211,9 +211,9 @@ func main() {
 							}
 							c, _ := q.RowsAffected()
 							if c == 1 {
-								log.Infof("Request updated. status=err. \n  src: %s\n  dst: %s", r.src, r.dst)
+								log.Infof("Request updated. reqID=%d status=err. \n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 							} else {
-								log.Warnf("Request already updated by anyone else. \n  src: %s\n  dst: %s", r.src, r.dst)
+								log.Warnf("Request already updated by anyone else. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 							}
 						}
 					}
