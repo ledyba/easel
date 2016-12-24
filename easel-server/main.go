@@ -6,8 +6,8 @@ import (
 	"net"
 	"runtime"
 
+	impl "github.com/ledyba/easel/easel-server/impl"
 	"github.com/ledyba/easel/proto"
-	impl "github.com/ledyba/easel/server-impl"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 

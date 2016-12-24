@@ -22,7 +22,7 @@ This library lets machines w/o GPU utilize remote GPU power via [grpc](http://ww
 [/easel-client-daemon](./easel-client-daemon): the entrypoint of "client-daemon" executable.
 
 [/image-filters](./image-filters): GLSL shaders. Currently, there is only a [lanczos10 filter](https://github.com/ledyba/easel/blob/master/image-filters/lanczos.go).  
-[/server-impl](./server-impl):  
+[/easel-server/impl](./server-impl):  
 [/proto](./proto): grpc definitions.  
 [/util](./util): utility functions.
 
