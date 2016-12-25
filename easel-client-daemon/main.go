@@ -4,11 +4,15 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"io/ioutil"
 	"os"
 	"time"
+
+	_ "github.com/chai2010/webp"
+	_ "golang.org/x/image/tiff"
 
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"

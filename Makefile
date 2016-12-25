@@ -24,6 +24,7 @@ inst:
 	go get -u "google.golang.org/grpc"
 	go get -u "github.com/chai2010/webp"
 	go get -u "github.com/go-sql-driver/mysql"
+	go get -u "golang.org/x/image/tiff"
 
 proto/easel_service.pb.go: proto/easel_service.proto
 	cd proto && PATH=$(GOPATH)/bin:$(PATH) protoc --go_out=plugins=grpc:. easel_service.proto

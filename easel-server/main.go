@@ -15,6 +15,9 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
+	_ "github.com/chai2010/webp"
+	_ "golang.org/x/image/tiff"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )

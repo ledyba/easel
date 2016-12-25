@@ -8,11 +8,13 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/chai2010/webp"
+	"golang.org/x/image/tiff"
 
 	"github.com/ledyba/easel"
 	"github.com/ledyba/easel/proto"
@@ -398,30 +400,9 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 	}
 	var bytes bytes.Buffer
 	writer := bufio.NewWriter(&bytes)
-	switch req.OutFormat {
-	case "image/png":
-		err = png.Encode(writer, img)
-		if err != nil {
-			return nil, err
-		}
-	case "image/jpeg":
-		fallthrough
-	case "image/jpg":
-		err = jpeg.Encode(writer, img, &jpeg.Options{
-			Quality: int(req.OutQuality),
-		})
-		if err != nil {
-			return nil, err
-		}
-	case "image/webp":
-		err = webp.Encode(writer, img, &webp.Options{
-			Quality: req.OutQuality,
-		})
-		if err != nil {
-			return nil, err
-		}
-	default:
-		err = fmt.Errorf("Unknown mime-type: %s", req.OutFormat)
+	err = saveImage(writer, img, req.OutFormat, req.OutQuality)
+	if err != nil {
+		return nil, err
 	}
 	err = writer.Flush()
 	if err != nil {
@@ -435,4 +416,43 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 		req.OutFormat,
 		bytes.Len(), (time.Now().Sub(now)).Seconds()*1000)
 	return resp, nil
+}
+
+func saveImage(writer io.Writer, img image.Image, format string, quality float32) error {
+	var err error
+	switch format {
+	case "image/png":
+		err = png.Encode(writer, img)
+		if err != nil {
+			return err
+		}
+	case "image/jpeg":
+		fallthrough
+	case "image/jpg":
+		err = jpeg.Encode(writer, img, &jpeg.Options{
+			Quality: int(quality),
+		})
+		if err != nil {
+			return err
+		}
+	case "image/webp":
+		err = webp.Encode(writer, img, &webp.Options{
+			Quality: quality,
+		})
+		if err != nil {
+			return err
+		}
+	case "image/tiff":
+		fallthrough
+	case "image/x-tiff":
+		err = tiff.Encode(writer, img, &tiff.Options{
+			Compression: tiff.Deflate,
+		})
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("Unknown mime-type: %s", format)
+	}
+	return nil
 }
