@@ -445,10 +445,10 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 			return nil, err
 		}
 	}
-	renderStart := time.Now()
 	size := image.Rect(0, 0, int(req.OutWidth), int(req.OutHeight))
-	renderElapsed := (time.Now().Sub(renderStart)).Seconds() * 1000
+	renderStart := time.Now()
 	img, err := p.Render(size)
+	renderElapsed := (time.Now().Sub(renderStart)).Seconds() * 1000
 	if err != nil {
 		return nil, err
 	}

@@ -37,6 +37,8 @@ var mimeType = flag.String("mime_type", "image/png", "output format. One of: ['i
 var help = flag.Bool("help", false, "Print help and exit")
 var ping = flag.Bool("ping", false, "Test ping and exit")
 var list = flag.Bool("list", false, "Listup canvas/easels and exit")
+var bench = flag.Bool("bench", false, "Benchmark mode. We does not save image.")
+var benchN = flag.Int("benchn", 1000, "How many duplicated images will be sent.")
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `
@@ -147,9 +149,6 @@ func main() {
 	}
 
 	/**** Update Palette ****/
-	var output []byte
-	var input []byte
-	var src image.Image
 	switch *filter {
 	case "lanczos":
 		err = filters.UpdateLanczos(serv, presp.EaselId, presp.PaletteId, *lobes)
@@ -157,26 +156,44 @@ func main() {
 			log.Fatal(err)
 		}
 		/**** Render Image ****/
-		for _, fname := range flag.Args() {
-			input, src, err = util.LoadImage(fname)
-			if err != nil {
-				log.Fatal(err)
+		if *bench {
+			for i := 0; i < *benchN; i++ {
+				for _, fname := range flag.Args() {
+					processImage(serv, eresp.EaselId, presp.PaletteId, fname, false)
+				}
 			}
-			widthf := *scale * float64(src.Bounds().Dx())
-			heightf := *scale * float64(src.Bounds().Dy())
-			output, err = filters.RenderLanczos(serv, presp.EaselId, presp.PaletteId, input, src, int(widthf), int(heightf), float32(*quality), *mimeType)
-			if err != nil {
-				log.Fatal(err)
+		} else {
+			for _, fname := range flag.Args() {
+				processImage(serv, eresp.EaselId, presp.PaletteId, fname, true)
 			}
-			log.Infof("Rendered: (%s > %s) %s", presp.EaselId, presp.PaletteId, fname)
-			outFilename := fmt.Sprintf("%s.out.png", strings.TrimSuffix(fname, path.Ext(fname)))
-			err = ioutil.WriteFile(outFilename, output, os.ModePerm)
-			if err != nil {
-				log.Fatal(err)
-			}
-			log.Infof("Saved to %s, %d bytes", outFilename, len(output))
 		}
 	default:
 		log.Fatalf("Unknown filter: %s", *filter)
+	}
+}
+
+func processImage(serv proto.EaselServiceClient, easelID, paletteID, fname string, save bool) {
+	var output []byte
+	var input []byte
+	var src image.Image
+	var err error
+	input, src, err = util.LoadImage(fname)
+	if err != nil {
+		log.Fatal(err)
+	}
+	widthf := *scale * float64(src.Bounds().Dx())
+	heightf := *scale * float64(src.Bounds().Dy())
+	output, err = filters.RenderLanczos(serv, easelID, paletteID, input, src, int(widthf), int(heightf), float32(*quality), *mimeType)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Infof("Rendered: (%s > %s) %s", easelID, paletteID, fname)
+	outFilename := fmt.Sprintf("%s.out.%s", strings.TrimSuffix(fname, path.Ext(fname)), strings.TrimPrefix(*mimeType, "image/"))
+	if save {
+		err = ioutil.WriteFile(outFilename, output, os.ModePerm)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Infof("Saved to %s, %d bytes", outFilename, len(output))
 	}
 }

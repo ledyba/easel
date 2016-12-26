@@ -45,7 +45,10 @@ var profListen = flag.String("prof_listen", ":3001", "Prof server port")
 
 func startServer(lis net.Listener, em *impl.EaselMaker) {
 	var err error
-	var gserver *grpc.Server
+	opts := []grpc.ServerOption{
+		grpc.MaxMsgSize(64 * 1024 * 1024),
+		grpc.MaxConcurrentStreams(100),
+	}
 	if len(*cert) > 0 && len(*certKey) > 0 {
 		var cred tls.Certificate
 		cred, err = tls.LoadX509KeyPair(*cert, *certKey)
@@ -55,11 +58,12 @@ func startServer(lis net.Listener, em *impl.EaselMaker) {
 		log.Info("Auth with x509:")
 		log.Infof("    cert: %s", *cert)
 		log.Infof("     key: %s", *certKey)
-		gserver = grpc.NewServer(grpc.Creds(credentials.NewServerTLSFromCert(&cred)))
+		opts = append(opts, grpc.Creds(credentials.NewServerTLSFromCert(&cred)))
 	} else {
 		log.Warn("No keypair provided. Insecure.")
-		gserver = grpc.NewServer()
 	}
+	gserver := grpc.NewServer(opts...)
+	log.Info(gserver)
 
 	server := impl.NewServer(em)
 	go server.StartGC()
