@@ -91,11 +91,11 @@ func NewServer(em *EaselMaker) *Server {
 // StartGC ...
 func (serv *Server) StartGC() {
 	t := time.NewTicker(ExpiredDuration)
-	log.Info("Start Easel GC")
+	log.Info("Start Easel GC timer.")
 	for {
 		select {
 		case <-t.C:
-			log.Info("Invok Easel GC")
+			log.Info("Start Easel GC")
 			serv.gc()
 		}
 	}
@@ -106,16 +106,19 @@ func (serv *Server) gc() {
 	defer serv.easelMutex.Unlock()
 
 	now := time.Now()
+	cnt := 0
 	for key, e := range serv.easelMap {
 		e.lock()
 		defer e.unlock()
 		if now.Sub(e.usedAt) >= ExpiredDuration {
 			e.easel.Destroy()
 			serv.deleteEasel(key)
+			cnt++
 			log.Warnf("Easel (%s) garbage collected.", key)
 			continue
 		}
 	}
+	log.Info("%d easels garbage collected.", cnt)
 }
 
 func (serv *Server) fetchEasel(name string) *EaselEntry {
@@ -364,6 +367,27 @@ func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteR
 		}
 	}
 	return &proto.UpdatePaletteResponse{}, nil
+}
+
+// Ping ...
+func (serv *Server) Ping(ctx context.Context, req *proto.PingRequest) (*proto.PongResponse, error) {
+	easelEnt := serv.fetchEasel(req.EaselId)
+	if easelEnt == nil {
+		return nil, ErrEaselNotFound
+	}
+	easelEnt.lock()
+	defer easelEnt.unlock()
+	paletteEnt := easelEnt.paletteMap[req.PaletteId]
+	if paletteEnt == nil {
+		return nil, ErrPaletteNotFound
+	}
+	paletteEnt.lock()
+	defer paletteEnt.unlock()
+	log.Info("Ping: ")
+	return &proto.PongResponse{
+		EaselId:   req.EaselId,
+		PaletteId: req.PaletteId,
+	}, nil
 }
 
 // Render ...

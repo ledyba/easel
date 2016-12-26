@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"sync/atomic"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	filters "github.com/ledyba/easel/image-filters"
@@ -16,13 +17,19 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+const (
+	// PingDuration ...
+	PingDuration = time.Second * 120
+)
+
 // Worker ...
 type Worker struct {
-	name      int
-	conn      *grpc.ClientConn
-	server    proto.EaselServiceClient
-	easelID   string
-	paletteID string
+	name       int
+	conn       *grpc.ClientConn
+	server     proto.EaselServiceClient
+	easelID    string
+	paletteID  string
+	pingTicker *time.Ticker
 }
 
 // ResampleRequest ...
@@ -36,6 +43,7 @@ type ResampleRequest struct {
 	dstMimeType string
 	status      int
 	err         error
+	ttl         int
 }
 
 var workerCount int32
@@ -44,7 +52,8 @@ func newWorker() *Worker {
 	name := int(atomic.AddInt32(&workerCount, 1))
 	log.Infof("Worker Created: %d", name)
 	return &Worker{
-		name: name,
+		name:       name,
+		pingTicker: time.NewTicker(PingDuration),
 	}
 }
 
@@ -65,7 +74,7 @@ func (w *Worker) connect() error {
 		log.Warn("No keypair provided. Insecure.")
 		dialOpt = grpc.WithInsecure()
 	}
-	w.conn, err = grpc.Dial(*server, dialOpt)
+	w.conn, err = grpc.Dial(*server, dialOpt, grpc.WithBlock())
 	if err != nil {
 		return err
 	}
@@ -86,7 +95,7 @@ func (w *Worker) connect() error {
 		EaselId: eresp.EaselId,
 	})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	log.Infof("[%d] Palette Created: (%s > %s)", w.name, w.easelID, presp.PaletteId)
 	w.paletteID = presp.PaletteId
@@ -140,7 +149,16 @@ func (w *Worker) render(req *ResampleRequest) ([]byte, error) {
 	return output, nil
 }
 
+func (w *Worker) ping() error {
+	_, err := w.server.Ping(context.Background(), &proto.PingRequest{
+		EaselId:   w.easelID,
+		PaletteId: w.paletteID,
+	})
+	return err
+}
+
 func (w *Worker) destroy() {
+	w.pingTicker.Stop()
 	if len(w.paletteID) > 0 {
 		w.server.DeletePalette(context.Background(), &proto.DeletePaletteRequest{
 			EaselId:   w.easelID,

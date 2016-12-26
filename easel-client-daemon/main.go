@@ -66,10 +66,19 @@ func main() {
 	for i := 0; i < *workers; i++ {
 		workerRestartChan <- true
 	}
-	fetcherRestartChan := make(chan bool, 1)
+	fetcherRestartChan := make(chan interface{}, 1)
 	fetcherRestartChan <- true
-	notifierRestartChan := make(chan bool, 1)
+	notifierRestartChan := make(chan interface{}, 1)
 	notifierRestartChan <- true
+	retry := func(r *ResampleRequest) {
+		r.ttl--
+		if r.ttl < 0 {
+			log.Errorf("TTL < 0. Give up. reqId=%d\n  src: %s\n  dst:%s", r.id, r.src, r.dst)
+			notifyQueue <- r
+			return
+		}
+		requestQueue <- r
+	}
 	for {
 		select {
 		case <-workerRestartChan:
@@ -105,18 +114,25 @@ func main() {
 						if err != nil {
 							log.Errorf("[%d] Rendering failed. reqID=%d\n  src: %s\n  dst: %s\n  err: %v", w.name, r.id, r.src, r.dst, err)
 							r.err = err
-							notifyQueue <- r
+							retry(r)
 						} else {
 							err = ioutil.WriteFile(r.dst, output, os.ModePerm)
 							if err != nil {
 								log.Errorf("[%d] Rendered successfully, but could not write file. reqID=%d\n  src: %s\n  dst: %s\n err: %v", w.name, r.id, r.src, r.dst, err)
 								r.err = err
-								notifyQueue <- r
+								retry(r)
 							} else {
 								log.Infof("[%d] Well done! reqID=%d\n  src: %s\n  dst: %s", w.name, r.id, r.src, r.dst)
 								notifyQueue <- r
 							}
 						}
+					case <-w.pingTicker.C:
+						err = w.ping()
+						if err != nil {
+							log.Errorf("[%d] Ping Failed (%s > %s).\n err: %v", w.name, w.easelID, w.paletteID, err)
+							return
+						}
+						log.Errorf("[%d] Ping Succeeded (%s > %s).", w.name, w.easelID, w.paletteID)
 					}
 				}
 			})()
@@ -163,6 +179,7 @@ func main() {
 								c, _ := q.RowsAffected()
 								if c == 1 {
 									log.Infof("Request fetched. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
+									r.ttl = 5
 									requestQueue <- &r
 								} else {
 									log.Warnf("Request is stealed by anyone else. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)

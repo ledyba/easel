@@ -8,6 +8,7 @@ service EaselService {
   rpc DeleteEasel(DeleteEaselRequest) returns (DeleteEaselResponse) {};
   rpc NewPalette(NewPaletteRequest) returns (NewPaletteResponse) {};
   rpc DeletePalette(DeletePaletteRequest) returns (DeletePaletteResponse) {};
+  rpc Ping(PingRequest) returns (PongResponse) {};
 
 // Setup
   rpc UpdatePalette(UpdatePaletteRequest) returns (UpdatePaletteResponse) {};
@@ -51,6 +52,18 @@ message DeletePaletteRequest {
 }
 message DeletePaletteResponse {
 }
+
+//Ping/Pong
+
+message PingRequest {
+  string easel_id = 1;
+  string palette_id = 2;
+}
+message PongResponse {
+  string easel_id = 1;
+  string palette_id = 2;
+}
+
 
 // UpdatePalette
 

@@ -35,6 +35,7 @@ var mimeType = flag.String("mime_type", "image/png", "output format. One of: ['i
 
 /* General */
 var help = flag.Bool("help", false, "Print help and exit")
+var ping = flag.Bool("ping", false, "Test ping and exit")
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `
@@ -107,6 +108,19 @@ func main() {
 		})
 		log.Printf("Palette Deleted: (%s > %s)", presp.EaselId, presp.PaletteId)
 	}()
+
+	if *ping {
+		_, err = serv.Ping(context.Background(), &proto.PingRequest{
+			EaselId:   eresp.EaselId,
+			PaletteId: presp.PaletteId,
+		})
+		if err != nil {
+			log.Errorf("Ping Failed: %v", err)
+		} else {
+			log.Info("Ping OK.")
+		}
+		return
+	}
 
 	/**** Update Palette ****/
 	var output []byte
