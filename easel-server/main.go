@@ -63,7 +63,6 @@ func startServer(lis net.Listener, em *impl.EaselMaker) {
 		log.Warn("No keypair provided. Insecure.")
 	}
 	gserver := grpc.NewServer(opts...)
-	log.Info(gserver)
 
 	server := impl.NewServer(em)
 	go server.StartGC()
