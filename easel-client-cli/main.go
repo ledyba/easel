@@ -36,6 +36,7 @@ var mimeType = flag.String("mime_type", "image/png", "output format. One of: ['i
 /* General */
 var help = flag.Bool("help", false, "Print help and exit")
 var ping = flag.Bool("ping", false, "Test ping and exit")
+var list = flag.Bool("list", false, "Listup canvas/easels and exit")
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `
@@ -50,7 +51,7 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 	printStartupBanner()
-	if (len(args) <= 0 && !*ping) || *help {
+	if (len(args) <= 0 && !*ping && !*list) || *help {
 		usage()
 		return
 	}
@@ -82,6 +83,29 @@ func main() {
 	})
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if *list {
+		var resp *proto.ListupResponse
+		resp, err = serv.Listup(context.Background(), &proto.ListupRequest{})
+		if err != nil {
+			log.Fatalf("Failed to listup easels: %v", err)
+		}
+		if len(resp.Easels) == 0 {
+			log.Info("Currently, there are no easels.")
+			return
+		}
+		for _, easel := range resp.Easels {
+			log.Infof("Easel: %s (%s)", easel.Id, easel.UpdatedAt)
+			if len(easel.Palettes) == 0 {
+				log.Infof("  <no palettes>")
+				continue
+			}
+			for _, palette := range easel.Palettes {
+				log.Infof("  - Palette: %s ()", palette.Id, palette.UpdatedAt)
+			}
+		}
+		return
 	}
 
 	/**** Create Easel ****/
@@ -155,5 +179,4 @@ func main() {
 	default:
 		log.Fatalf("Unknown filter: %s", *filter)
 	}
-
 }

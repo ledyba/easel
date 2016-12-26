@@ -390,6 +390,33 @@ func (serv *Server) Ping(ctx context.Context, req *proto.PingRequest) (*proto.Po
 	}, nil
 }
 
+// Listup ...
+func (serv *Server) Listup(ctx context.Context, req *proto.ListupRequest) (*proto.ListupResponse, error) {
+	serv.easelMutex.Lock()
+	defer serv.easelMutex.Unlock()
+
+	easels := make([]*proto.EaselInfo, 0)
+	for k, v := range serv.easelMap {
+		info := &proto.EaselInfo{}
+		info.Id = k
+		info.UpdatedAt = v.usedAt.String()
+		info.Palettes = make([]*proto.PaletteInfo, 0)
+		(func() {
+			v.lock()
+			defer v.unlock()
+			for paletteName, palette := range v.paletteMap {
+				info.Palettes = append(info.Palettes, &proto.PaletteInfo{
+					Id:        paletteName,
+					UpdatedAt: palette.usedAt.String(),
+				})
+			}
+		})()
+	}
+	return &proto.ListupResponse{
+		Easels: easels,
+	}, nil
+}
+
 // Render ...
 func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*proto.RenderResponse, error) {
 	now := time.Now()

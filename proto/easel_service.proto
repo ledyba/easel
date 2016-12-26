@@ -9,6 +9,7 @@ service EaselService {
   rpc NewPalette(NewPaletteRequest) returns (NewPaletteResponse) {};
   rpc DeletePalette(DeletePaletteRequest) returns (DeletePaletteResponse) {};
   rpc Ping(PingRequest) returns (PongResponse) {};
+  rpc Listup(ListupRequest) returns (ListupResponse) {};
 
 // Setup
   rpc UpdatePalette(UpdatePaletteRequest) returns (UpdatePaletteResponse) {};
@@ -64,6 +65,25 @@ message PongResponse {
   string palette_id = 2;
 }
 
+// Listup
+
+message EaselInfo {
+  string id = 1;
+  string updated_at = 2;
+  repeated PaletteInfo palettes = 3;
+}
+
+message PaletteInfo {
+  string id = 1;
+  string updated_at = 2;
+}
+
+message ListupRequest {
+}
+
+message ListupResponse {
+  repeated EaselInfo easels = 1;
+}
 
 // UpdatePalette
 
