@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 
 	log "github.com/Sirupsen/logrus"
 	filters "github.com/ledyba/easel/image-filters"
@@ -38,7 +39,8 @@ var help = flag.Bool("help", false, "Print help and exit")
 var ping = flag.Bool("ping", false, "Test ping and exit")
 var list = flag.Bool("list", false, "Listup canvas/easels and exit")
 var bench = flag.Bool("bench", false, "Benchmark mode. We does not save image.")
-var benchN = flag.Int("benchn", 1000, "How many duplicated images will be sent.")
+var benchN = flag.Int("benchn", 10, "How many easels will be created.")
+var benchM = flag.Int("benchm", 10, "How many duplicated images will be sent.")
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `
@@ -57,6 +59,73 @@ func main() {
 		usage()
 		return
 	}
+
+	if *list {
+		listup()
+		return
+	}
+
+	if *ping {
+		doPing()
+		return
+	}
+
+	if *bench {
+		var wg sync.WaitGroup
+		wg.Add(*benchN)
+		for i := 0; i < *benchN; i++ {
+			go processImage(&wg, flag.Args(), true)
+		}
+		wg.Wait()
+	} else {
+		processImage(nil, flag.Args(), false)
+	}
+
+}
+
+func listup() {
+	var err error
+	conn, serv := makeConnection()
+	defer conn.Close()
+	var resp *proto.ListupResponse
+	resp, err = serv.Listup(context.Background(), &proto.ListupRequest{})
+	if err != nil {
+		log.Fatalf("Failed to listup easels: %v", err)
+	}
+	if len(resp.Easels) == 0 {
+		log.Info("Currently, there are no easels.")
+		return
+	}
+	for _, easel := range resp.Easels {
+		log.Infof("Easel: %s (%s)", easel.Id, easel.UpdatedAt)
+		if len(easel.Palettes) == 0 {
+			log.Infof("  <no palettes>")
+			continue
+		}
+		for _, palette := range easel.Palettes {
+			log.Infof("  - Palette: %s ()", palette.Id, palette.UpdatedAt)
+		}
+	}
+}
+
+func doPing() {
+	var err error
+	conn, serv := makeConnection()
+	defer conn.Close()
+	easelID, paletteID, closer := makeEaselAndPalette(serv)
+	defer closer()
+	_, err = serv.Ping(context.Background(), &proto.PingRequest{
+		EaselId:   easelID,
+		PaletteId: paletteID,
+	})
+	if err != nil {
+		log.Errorf("Ping Failed: %v", err)
+	} else {
+		log.Info("Ping OK.")
+	}
+}
+
+func makeConnection() (*grpc.ClientConn, proto.EaselServiceClient) {
 	var err error
 	var dialOpt grpc.DialOption
 	if len(*cert) > 0 && len(*certKey) > 0 {
@@ -77,123 +146,100 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close()
-
 	serv := proto.NewEaselServiceClient(conn)
+	return conn, serv
+}
+
+func makeEaselAndPalette(serv proto.EaselServiceClient) (string, string, func()) {
+	var err error
 	eresp, err := serv.NewEasel(context.Background(), &proto.NewEaselRequest{
 		EaselId: "",
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	if *list {
-		var resp *proto.ListupResponse
-		resp, err = serv.Listup(context.Background(), &proto.ListupRequest{})
-		if err != nil {
-			log.Fatalf("Failed to listup easels: %v", err)
-		}
-		if len(resp.Easels) == 0 {
-			log.Info("Currently, there are no easels.")
-			return
-		}
-		for _, easel := range resp.Easels {
-			log.Infof("Easel: %s (%s)", easel.Id, easel.UpdatedAt)
-			if len(easel.Palettes) == 0 {
-				log.Infof("  <no palettes>")
-				continue
-			}
-			for _, palette := range easel.Palettes {
-				log.Infof("  - Palette: %s ()", palette.Id, palette.UpdatedAt)
-			}
-		}
-		return
-	}
+	easelID := eresp.EaselId
 
 	/**** Create Easel ****/
-	log.Printf("Easel Created: %s", eresp.EaselId)
-	defer func() {
+	log.Printf("Easel Created: %s", easelID)
+	closeEasel := func() {
 		serv.DeleteEasel(context.Background(), &proto.DeleteEaselRequest{
-			EaselId: eresp.EaselId,
+			EaselId: easelID,
 		})
-		log.Printf("Easel Deleted: %s", eresp.EaselId)
-	}()
+		log.Printf("Easel Deleted: %s", easelID)
+	}
 
 	/**** Create Palette ****/
 	presp, err := serv.NewPalette(context.Background(), &proto.NewPaletteRequest{
-		EaselId: eresp.EaselId,
+		EaselId: easelID,
 	})
 	if err != nil {
+		closeEasel()
 		log.Fatal(err)
 	}
-	log.Printf("Palette Created: (%s > %s)", presp.EaselId, presp.PaletteId)
-	defer func() {
+	paletteID := presp.PaletteId
+	log.Printf("Palette Created: (%s > %s)", easelID, paletteID)
+	closePalette := func() {
 		serv.DeletePalette(context.Background(), &proto.DeletePaletteRequest{
-			EaselId:   eresp.EaselId,
-			PaletteId: presp.PaletteId,
+			EaselId:   easelID,
+			PaletteId: paletteID,
 		})
-		log.Printf("Palette Deleted: (%s > %s)", presp.EaselId, presp.PaletteId)
-	}()
-
-	if *ping {
-		_, err = serv.Ping(context.Background(), &proto.PingRequest{
-			EaselId:   eresp.EaselId,
-			PaletteId: presp.PaletteId,
-		})
-		if err != nil {
-			log.Errorf("Ping Failed: %v", err)
-		} else {
-			log.Info("Ping OK.")
-		}
-		return
+		log.Printf("Palette Deleted: (%s > %s)", easelID, paletteID)
 	}
+	return easelID, paletteID, func() {
+		closePalette()
+		closeEasel()
+	}
+}
 
+func processImage(wg *sync.WaitGroup, fnames []string, bench bool) {
+	if wg != nil {
+		defer wg.Done()
+	}
+	var err error
+	conn, serv := makeConnection()
+	defer conn.Close()
+	easelID, paletteID, closer := makeEaselAndPalette(serv)
+	defer closer()
 	/**** Update Palette ****/
 	switch *filter {
 	case "lanczos":
-		err = filters.UpdateLanczos(serv, presp.EaselId, presp.PaletteId, *lobes)
+		err = filters.UpdateLanczos(serv, easelID, paletteID, *lobes)
 		if err != nil {
 			log.Fatal(err)
 		}
 		/**** Render Image ****/
-		if *bench {
-			for i := 0; i < *benchN; i++ {
-				for _, fname := range flag.Args() {
-					processImage(serv, eresp.EaselId, presp.PaletteId, fname, false)
+		var output []byte
+		var input []byte
+		var src image.Image
+		m := 1
+		if bench {
+			m = *benchM
+		}
+		for i := 0; i < m; i++ {
+			for _, fname := range fnames {
+				input, src, err = util.LoadImage(fname)
+				if err != nil {
+					log.Fatal(err)
 				}
-			}
-		} else {
-			for _, fname := range flag.Args() {
-				processImage(serv, eresp.EaselId, presp.PaletteId, fname, true)
+				widthf := *scale * float64(src.Bounds().Dx())
+				heightf := *scale * float64(src.Bounds().Dy())
+				output, err = filters.RenderLanczos(serv, easelID, paletteID, input, src, int(widthf), int(heightf), float32(*quality), *mimeType)
+				if err != nil {
+					log.Fatal(err)
+				}
+				log.Infof("Rendered: (%s > %s) %s", easelID, paletteID, fname)
+				outFilename := fmt.Sprintf("%s.out.%s", strings.TrimSuffix(fname, path.Ext(fname)), strings.TrimPrefix(*mimeType, "image/"))
+				if !bench {
+					err = ioutil.WriteFile(outFilename, output, os.ModePerm)
+					if err != nil {
+						log.Fatal(err)
+					}
+					log.Infof("Saved to %s, %d bytes", outFilename, len(output))
+				}
 			}
 		}
 	default:
 		log.Fatalf("Unknown filter: %s", *filter)
-	}
-}
-
-func processImage(serv proto.EaselServiceClient, easelID, paletteID, fname string, save bool) {
-	var output []byte
-	var input []byte
-	var src image.Image
-	var err error
-	input, src, err = util.LoadImage(fname)
-	if err != nil {
-		log.Fatal(err)
-	}
-	widthf := *scale * float64(src.Bounds().Dx())
-	heightf := *scale * float64(src.Bounds().Dy())
-	output, err = filters.RenderLanczos(serv, easelID, paletteID, input, src, int(widthf), int(heightf), float32(*quality), *mimeType)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Infof("Rendered: (%s > %s) %s", easelID, paletteID, fname)
-	outFilename := fmt.Sprintf("%s.out.%s", strings.TrimSuffix(fname, path.Ext(fname)), strings.TrimPrefix(*mimeType, "image/"))
-	if save {
-		err = ioutil.WriteFile(outFilename, output, os.ModePerm)
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Infof("Saved to %s, %d bytes", outFilename, len(output))
 	}
 }

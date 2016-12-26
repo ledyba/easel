@@ -47,7 +47,7 @@ func startServer(lis net.Listener, em *impl.EaselMaker) {
 	var err error
 	opts := []grpc.ServerOption{
 		grpc.MaxMsgSize(64 * 1024 * 1024),
-		grpc.MaxConcurrentStreams(100),
+		//grpc.MaxConcurrentStreams(100),
 	}
 	if len(*cert) > 0 && len(*certKey) > 0 {
 		var cred tls.Certificate
