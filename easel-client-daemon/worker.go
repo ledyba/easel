@@ -150,10 +150,12 @@ func (w *Worker) render(req *ResampleRequest) ([]byte, error) {
 }
 
 func (w *Worker) ping() error {
-	_, err := w.server.Ping(context.Background(), &proto.PingRequest{
+	resp, err := w.server.Ping(context.Background(), &proto.PingRequest{
 		EaselId:   w.easelID,
 		PaletteId: w.paletteID,
+		Message:   fmt.Sprintf("Worker %d, easelID: %s paletteID: %s", w.name, w.easelID, w.paletteID),
 	})
+	log.Infof("Pong: %s", resp.Message)
 	return err
 }
 

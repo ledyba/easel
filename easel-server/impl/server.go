@@ -383,7 +383,7 @@ func (serv *Server) Ping(ctx context.Context, req *proto.PingRequest) (*proto.Po
 	}
 	paletteEnt.lock()
 	defer paletteEnt.unlock()
-	log.Info("Ping: %s", req.Message)
+	log.Infof("Ping: %s", req.Message)
 	return &proto.PongResponse{
 		EaselId:   req.EaselId,
 		PaletteId: req.PaletteId,
