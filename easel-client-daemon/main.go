@@ -62,14 +62,14 @@ func main() {
 	requestQueue := make(chan *ResampleRequest, 100)
 	notifyQueue := make(chan *ResampleRequest, 100)
 	/* chan to controll worker counts */
-	workerRestartChan := make(chan bool, *workers)
+	workerRestartChan := make(chan struct{}, *workers)
 	for i := 0; i < *workers; i++ {
-		workerRestartChan <- true
+		workerRestartChan <- struct{}{}
 	}
-	fetcherRestartChan := make(chan interface{}, 1)
-	fetcherRestartChan <- true
-	notifierRestartChan := make(chan interface{}, 1)
-	notifierRestartChan <- true
+	fetcherRestartChan := make(chan struct{}, 1)
+	fetcherRestartChan <- struct{}{}
+	notifierRestartChan := make(chan struct{}, 1)
+	notifierRestartChan <- struct{}{}
 	retry := func(r *ResampleRequest) {
 		r.ttl--
 		if r.ttl < 0 {
@@ -89,7 +89,7 @@ func main() {
 				defer (func() {
 					log.Errorf("[%d] Disconnected. Retry in 5 secs...", w.name)
 					time.Sleep(5 * time.Second)
-					workerRestartChan <- true
+					workerRestartChan <- struct{}{}
 				})()
 				err = w.connect()
 				if err != nil {
@@ -147,7 +147,7 @@ func main() {
 				defer (func() {
 					log.Error("DB Fetcher disconnected. Retry in 5 secs...")
 					time.Sleep(5 * time.Second)
-					fetcherRestartChan <- true
+					fetcherRestartChan <- struct{}{}
 				})()
 				var db *sql.DB
 				var err error
@@ -204,7 +204,7 @@ func main() {
 				defer (func() {
 					log.Errorf("DB Notifier disconnected. Retry in 5 secs...")
 					time.Sleep(5 * time.Second)
-					notifierRestartChan <- true
+					notifierRestartChan <- struct{}{}
 				})()
 				var db *sql.DB
 				var err error
