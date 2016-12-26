@@ -18,6 +18,9 @@ import (
 	_ "github.com/chai2010/webp"
 	_ "golang.org/x/image/tiff"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -35,6 +38,10 @@ var certKey = flag.String("cert_key", "", "private key file")
 
 /* General */
 var help = flag.Bool("help", false, "Print help and exit")
+
+/* Profiler */
+var prof = flag.Bool("prof", false, "Enable profiler")
+var profListen = flag.String("prof_listen", ":3001", "Prof server port")
 
 func startServer(lis net.Listener, em *impl.EaselMaker) {
 	var err error
@@ -67,6 +74,12 @@ func main() {
 	if *help {
 		flag.Usage()
 		return
+	}
+	if *prof {
+		go func() {
+			log.Info("Profiler enabled.")
+			log.Fatal(http.ListenAndServe(*profListen, nil))
+		}()
 	}
 
 	var err error

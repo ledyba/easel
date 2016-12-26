@@ -59,10 +59,12 @@ message DeletePaletteResponse {
 message PingRequest {
   string easel_id = 1;
   string palette_id = 2;
+  string message = 3;
 }
 message PongResponse {
   string easel_id = 1;
   string palette_id = 2;
+  string message = 3;
 }
 
 // Listup

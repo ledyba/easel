@@ -383,10 +383,11 @@ func (serv *Server) Ping(ctx context.Context, req *proto.PingRequest) (*proto.Po
 	}
 	paletteEnt.lock()
 	defer paletteEnt.unlock()
-	log.Info("Ping: ")
+	log.Info("Ping: %s", req.Message)
 	return &proto.PongResponse{
 		EaselId:   req.EaselId,
 		PaletteId: req.PaletteId,
+		Message:   req.Message,
 	}, nil
 }
 
@@ -444,14 +445,18 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 			return nil, err
 		}
 	}
+	renderStart := time.Now()
 	size := image.Rect(0, 0, int(req.OutWidth), int(req.OutHeight))
+	renderElapsed := (time.Now().Sub(renderStart)).Seconds() * 1000
 	img, err := p.Render(size)
 	if err != nil {
 		return nil, err
 	}
 	var bytes bytes.Buffer
 	writer := bufio.NewWriter(&bytes)
+	encodeStart := time.Now()
 	err = saveImage(writer, img, req.OutFormat, req.OutQuality)
+	encodeElapsed := (time.Now().Sub(encodeStart)).Seconds() * 1000
 	if err != nil {
 		return nil, err
 	}
@@ -461,11 +466,19 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 	}
 	resp := &proto.RenderResponse{}
 	resp.Output = bytes.Bytes()
-	log.Infof("Rendered %dx%d %s (%d bytes) image, %fms elapsed.",
+	totalElapsed := (time.Now().Sub(now)).Seconds() * 1000
+	log.Infof(`%dx%d %s (%d bytes) image drawn.
+	total: %5.3fms
+	- rendering: %fms(% .2f%%)
+	- encoding: %fms(% .2f%%)`,
 		img.Bounds().Dx(),
 		img.Bounds().Dy(),
 		req.OutFormat,
-		bytes.Len(), (time.Now().Sub(now)).Seconds()*1000)
+		bytes.Len(),
+		totalElapsed,
+		renderElapsed, (renderElapsed/totalElapsed)*100.0,
+		encodeElapsed, (encodeElapsed/totalElapsed)*100.0,
+	)
 	return resp, nil
 }
 
