@@ -50,7 +50,7 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 	printStartupBanner()
-	if len(args) <= 0 || *help {
+	if (len(args) <= 0 && !*ping) || *help {
 		usage()
 		return
 	}
