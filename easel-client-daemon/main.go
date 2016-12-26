@@ -101,6 +101,7 @@ func main() {
 					log.Errorf("[%d] Error on initialize: %v", w.name, err)
 					return
 				}
+				sanity := 0
 				var output []byte
 				for {
 					select {
@@ -115,12 +116,17 @@ func main() {
 							log.Errorf("[%d] Rendering failed. reqID=%d\n  src: %s\n  dst: %s\n  err: %v", w.name, r.id, r.src, r.dst, err)
 							r.err = err
 							retry(r)
+							sanity--
 						} else {
 							err = ioutil.WriteFile(r.dst, output, os.ModePerm)
 							if err != nil {
 								log.Errorf("[%d] Rendered successfully, but could not write file. reqID=%d\n  src: %s\n  dst: %s\n err: %v", w.name, r.id, r.src, r.dst, err)
 								r.err = err
 								retry(r)
+								sanity--
+								if sanity < 0 {
+									return
+								}
 							} else {
 								log.Infof("[%d] Well done! reqID=%d\n  src: %s\n  dst: %s", w.name, r.id, r.src, r.dst)
 								notifyQueue <- r
