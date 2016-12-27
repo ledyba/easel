@@ -4,17 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"image"
-	"image/jpeg"
-	"image/png"
-	"io"
 	"runtime"
 	"sync"
 	"time"
-
-	"github.com/chai2010/webp"
-	"golang.org/x/image/tiff"
 
 	"github.com/ledyba/easel"
 	"github.com/ledyba/easel/proto"
@@ -455,7 +448,7 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 	var bytes bytes.Buffer
 	writer := bufio.NewWriter(&bytes)
 	encodeStart := time.Now()
-	err = saveImage(writer, img, req.OutFormat, req.OutQuality)
+	err = util.EncodeImage(writer, img, req.OutFormat, req.OutQuality)
 	encodeElapsed := (time.Now().Sub(encodeStart)).Seconds() * 1000
 	if err != nil {
 		return nil, err
@@ -480,43 +473,4 @@ func (serv *Server) Render(ctx context.Context, req *proto.RenderRequest) (*prot
 		encodeElapsed, (encodeElapsed/totalElapsed)*100.0,
 	)
 	return resp, nil
-}
-
-func saveImage(writer io.Writer, img image.Image, format string, quality float32) error {
-	var err error
-	switch format {
-	case "image/png":
-		err = png.Encode(writer, img)
-		if err != nil {
-			return err
-		}
-	case "image/jpeg":
-		fallthrough
-	case "image/jpg":
-		err = jpeg.Encode(writer, img, &jpeg.Options{
-			Quality: int(quality),
-		})
-		if err != nil {
-			return err
-		}
-	case "image/webp":
-		err = webp.Encode(writer, img, &webp.Options{
-			Quality: quality,
-		})
-		if err != nil {
-			return err
-		}
-	case "image/tiff":
-		fallthrough
-	case "image/x-tiff":
-		err = tiff.Encode(writer, img, &tiff.Options{
-			Compression: tiff.Deflate,
-		})
-		if err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("Unknown mime-type: %s", format)
-	}
-	return nil
 }

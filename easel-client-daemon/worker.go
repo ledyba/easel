@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"image"
+	"io"
 	"sync/atomic"
 	"time"
 
@@ -117,36 +118,37 @@ func (w *Worker) init() error {
 	return nil
 }
 
-func (w *Worker) render(req *ResampleRequest) ([]byte, error) {
+func (w *Worker) render(req *ResampleRequest, dst io.Writer) error {
 	var err error
 	/**** Let's Render ****/
-	var output []byte
 	var input []byte
 	var src image.Image
 	input, src, err = util.LoadImage(req.src)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	srcWidth := src.Bounds().Dx()
 	srcHeight := src.Bounds().Dy()
 	if req.dstHeight < 0 && req.dstWidth < 0 {
-		return nil, fmt.Errorf("Either dstHeight or dstWidth, or both must be specified.")
+		return fmt.Errorf("Either dstHeight or dstWidth, or both must be specified.")
 	} else if req.dstHeight < 0 {
 		req.dstHeight = srcHeight * req.dstWidth / srcWidth
 	} else if req.dstWidth < 0 {
 		req.dstWidth = srcWidth * req.dstHeight / srcHeight
 	}
 
+	// Try bypass
+	if req.dstHeight == srcHeight && req.dstWidth == srcWidth {
+		log.Infof("Input size and output size are the same (x%dx%d), so it will be just re-encoded.", srcWidth, srcHeight)
+		return util.EncodeImage(dst, src, req.dstMimeType, req.dstQuality)
+	}
+
 	switch *filter {
 	case filters.LanczosFilter:
-		output, err = filters.RenderLanczos(w.server, w.easelID, w.paletteID, input, src, req.dstWidth, req.dstHeight, req.dstQuality, req.dstMimeType)
-		if err != nil {
-			return nil, err
-		}
+		return filters.RenderLanczos(w.server, w.easelID, w.paletteID, input, src, req.dstWidth, req.dstHeight, req.dstQuality, req.dstMimeType, dst)
 	default:
-		return nil, fmt.Errorf("Unknown filter: %s", *filter)
+		return fmt.Errorf("Unknown filter: %s", *filter)
 	}
-	return output, nil
 }
 
 func (w *Worker) ping() error {

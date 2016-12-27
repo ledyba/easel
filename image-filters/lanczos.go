@@ -1,7 +1,9 @@
 package filters
 
 import (
+	"fmt"
 	"image"
+	"io"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -125,7 +127,7 @@ func UpdateLanczos(serv proto.EaselServiceClient, easelID, paletteID string, lob
 }
 
 // RenderLanczos ...
-func RenderLanczos(serv proto.EaselServiceClient, easelID, paletteID string, data []byte, src image.Image, width, height int, quality float32, mimeType string) ([]byte, error) {
+func RenderLanczos(serv proto.EaselServiceClient, easelID, paletteID string, data []byte, src image.Image, width, height int, quality float32, mimeType string, dstWriter io.Writer) error {
 	resp, err := serv.Render(context.Background(), &proto.RenderRequest{
 		EaselId:    easelID,
 		PaletteId:  paletteID,
@@ -153,7 +155,15 @@ func RenderLanczos(serv proto.EaselServiceClient, easelID, paletteID string, dat
 						Data: []float32{
 							float32(src.Bounds().Dx()), float32(src.Bounds().Dy())}}}}}})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return resp.Output, nil
+	var writed int
+	writed, err = dstWriter.Write(resp.Output)
+	if err != nil {
+		return err
+	}
+	if writed != len(resp.Output) {
+		return fmt.Errorf("Couldn't write entire rendered image data to writer. %d vs %d", len(resp.Output), writed)
+	}
+	return nil
 }

@@ -7,7 +7,7 @@ import (
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -209,34 +209,39 @@ func processImage(wg *sync.WaitGroup, fnames []string, bench bool) {
 			log.Fatal(err)
 		}
 		/**** Render Image ****/
-		var output []byte
-		var input []byte
-		var src image.Image
-		m := 1
-		if bench {
-			m = *benchM
+		process := func(fname string, writer io.Writer) {
+			var input []byte
+			var src image.Image
+			input, src, err = util.LoadImage(fname)
+			if err != nil {
+				log.Fatal(err)
+			}
+			widthf := *scale * float64(src.Bounds().Dx())
+			heightf := *scale * float64(src.Bounds().Dy())
+			err = filters.RenderLanczos(serv, easelID, paletteID, input, src, int(widthf), int(heightf), float32(*quality), *mimeType, writer)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Infof("Rendered: (%s > %s) %s", easelID, paletteID, fname)
 		}
-		for i := 0; i < m; i++ {
+		if bench {
+			for i := 0; i < *benchM; i++ {
+				for _, fname := range fnames {
+					process(fname, util.DevNull)
+				}
+			}
+		} else {
 			for _, fname := range fnames {
-				input, src, err = util.LoadImage(fname)
-				if err != nil {
-					log.Fatal(err)
-				}
-				widthf := *scale * float64(src.Bounds().Dx())
-				heightf := *scale * float64(src.Bounds().Dy())
-				output, err = filters.RenderLanczos(serv, easelID, paletteID, input, src, int(widthf), int(heightf), float32(*quality), *mimeType)
-				if err != nil {
-					log.Fatal(err)
-				}
-				log.Infof("Rendered: (%s > %s) %s", easelID, paletteID, fname)
-				outFilename := fmt.Sprintf("%s.out.%s", strings.TrimSuffix(fname, path.Ext(fname)), strings.TrimPrefix(*mimeType, "image/"))
-				if !bench {
-					err = ioutil.WriteFile(outFilename, output, os.ModePerm)
+				(func() {
+					outFilename := fmt.Sprintf("%s.out.%s", strings.TrimSuffix(fname, path.Ext(fname)), strings.TrimPrefix(*mimeType, "image/"))
+					var file *os.File
+					file, err = os.Create(outFilename)
 					if err != nil {
 						log.Fatal(err)
 					}
-					log.Infof("Saved to %s, %d bytes", outFilename, len(output))
-				}
+					defer file.Close()
+					process(fname, file)
+				})()
 			}
 		}
 	default:

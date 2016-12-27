@@ -7,7 +7,6 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -102,7 +101,6 @@ func main() {
 					return
 				}
 				sanity := 0
-				var output []byte
 				for {
 					select {
 					case r, ok := <-requestQueue:
@@ -111,26 +109,33 @@ func main() {
 							return
 						}
 						log.Infof("[%d] Start rendering. reqID=%d\n  src: %s\n  dst: %s", w.name, r.id, r.src, r.dst)
-						output, err = w.render(r)
+						var dst *os.File
+						dst, err = os.Create(r.dst)
 						if err != nil {
-							log.Errorf("[%d] Rendering failed. reqID=%d\n  src: %s\n  dst: %s\n  err: %v", w.name, r.id, r.src, r.dst, err)
+							log.Errorf("[%d] Couldn't open a file to write. reqID=%d\n  src: %s\n  dst: %s\n err: %v", w.name, r.id, r.src, r.dst, err)
 							r.err = err
-							retry(r)
-							sanity--
-						} else {
-							err = ioutil.WriteFile(r.dst, output, os.ModePerm)
+							notifyQueue <- r
+							continue
+						}
+						shouldSuicide := (func() bool {
+							defer dst.Close()
+							err = w.render(r, dst)
 							if err != nil {
-								log.Errorf("[%d] Rendered successfully, but could not write file. reqID=%d\n  src: %s\n  dst: %s\n err: %v", w.name, r.id, r.src, r.dst, err)
+								log.Errorf("[%d] Rendering failed. reqID=%d\n  src: %s\n  dst: %s\n  err: %v", w.name, r.id, r.src, r.dst, err)
 								r.err = err
 								retry(r)
 								sanity--
 								if sanity < 0 {
-									return
+									return true
 								}
 							} else {
 								log.Infof("[%d] Well done! reqID=%d\n  src: %s\n  dst: %s", w.name, r.id, r.src, r.dst)
 								notifyQueue <- r
 							}
+							return false
+						})()
+						if shouldSuicide {
+							return
 						}
 					case <-w.pingTicker.C:
 						err = w.ping()
@@ -188,7 +193,7 @@ func main() {
 									r.ttl = 5
 									requestQueue <- &r
 								} else {
-									log.Warnf("Request is stealed by anyone else. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
+									log.Warnf("Request is stealed by someone else. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 								}
 							}
 							return nil
@@ -228,7 +233,7 @@ func main() {
 							if c == 1 {
 								log.Infof("Request updated. reqID=%d status=done. \n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 							} else {
-								log.Warnf("Request already updated by anyone else. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
+								log.Warnf("Request already updated by someone else. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 							}
 						} else {
 							q, err = db.Exec("update `resample_requests` SET `status`=3 where `id`=?", r.id)
@@ -240,7 +245,7 @@ func main() {
 							if c == 1 {
 								log.Infof("Request updated. reqID=%d status=err. \n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 							} else {
-								log.Warnf("Request already updated by anyone else. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
+								log.Warnf("Request already updated by someone else. reqID=%d\n  src: %s\n  dst: %s", r.id, r.src, r.dst)
 							}
 						}
 					}
