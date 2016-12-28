@@ -386,7 +386,7 @@ func (serv *Server) Ping(ctx context.Context, req *proto.PingRequest) (*proto.Po
 	paletteEnt.lock()
 	defer paletteEnt.unlock()
 	paletteEnt.peer, _ = peer.FromContext(ctx)
-	log.Infof("Ping: %s from %s (auth: %s)", req.Message, paletteEnt.peer.Addr.String(), paletteEnt.peer.AuthInfo.AuthType())
+	log.Infof("Ping: %s from %s", req.Message, peerToString(paletteEnt.peer))
 	return &proto.PongResponse{
 		EaselId:   req.EaselId,
 		PaletteId: req.PaletteId,
