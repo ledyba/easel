@@ -4,10 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"image"
 	"runtime"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc/peer"
 
 	"github.com/ledyba/easel"
 	"github.com/ledyba/easel/proto"
@@ -44,6 +47,7 @@ type EaselEntry struct {
 	usedAt     time.Time
 	mutex      *sync.Mutex
 	paletteMap map[string]*PaletteEntry
+	peer       *peer.Peer
 }
 
 func (ent *EaselEntry) lock() {
@@ -61,6 +65,7 @@ type PaletteEntry struct {
 	mutex         *sync.Mutex
 	vertexBuffers map[string]*easel.VertexBuffer
 	indecies      *easel.VertexBuffer
+	peer          *peer.Peer
 }
 
 func (ent *PaletteEntry) lock() {
@@ -133,13 +138,15 @@ func (serv *Server) deleteEasel(name string) bool {
 	return false
 }
 
-func (serv *Server) makeEasel(name string) *EaselEntry {
+func (serv *Server) makeEasel(c context.Context, name string) *EaselEntry {
 	e := <-serv.easelMaker.RequestNewEasel()
+	p, _ := peer.FromContext(c)
 	ent := &EaselEntry{
 		easel:      e,
 		usedAt:     time.Now(),
 		mutex:      new(sync.Mutex),
 		paletteMap: make(map[string]*PaletteEntry),
+		peer:       p,
 	}
 	serv.easelMutex.Lock()
 	defer serv.easelMutex.Unlock()
@@ -158,9 +165,7 @@ func (serv *Server) NewEasel(c context.Context, req *proto.NewEaselRequest) (*pr
 		}
 	}
 	name := util.RandString(10)
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-	serv.makeEasel(name)
+	serv.makeEasel(c, name)
 	resp := &proto.NewEaselResponse{}
 	resp.EaselId = name
 	return resp, nil
@@ -192,11 +197,13 @@ func (serv *Server) NewPalette(ctx context.Context, req *proto.NewPaletteRequest
 		return nil, err
 	}
 	name := util.RandString(10)
+	p, _ := peer.FromContext(ctx)
 	ent.paletteMap[name] = &PaletteEntry{
 		palette:       palette,
 		usedAt:        time.Now(),
 		mutex:         new(sync.Mutex),
 		vertexBuffers: make(map[string]*easel.VertexBuffer),
+		peer:          p,
 	}
 	resp := &proto.NewPaletteResponse{
 		EaselId:   req.EaselId,
@@ -353,6 +360,7 @@ func (serv *Server) UpdatePalette(ctx context.Context, req *proto.UpdatePaletteR
 	}
 	paletteEnt.lock()
 	defer paletteEnt.unlock()
+	paletteEnt.peer, _ = peer.FromContext(ctx)
 	e := easelEnt.easel
 	if req.Updates != nil {
 		err = serv.updatePalette(e, paletteEnt, req.Updates)
@@ -377,7 +385,8 @@ func (serv *Server) Ping(ctx context.Context, req *proto.PingRequest) (*proto.Po
 	}
 	paletteEnt.lock()
 	defer paletteEnt.unlock()
-	log.Infof("Ping: %s", req.Message)
+	paletteEnt.peer, _ = peer.FromContext(ctx)
+	log.Infof("Ping: %s from %s (auth: %s)", req.Message, paletteEnt.peer.Addr.String(), paletteEnt.peer.AuthInfo.AuthType())
 	return &proto.PongResponse{
 		EaselId:   req.EaselId,
 		PaletteId: req.PaletteId,
@@ -394,6 +403,7 @@ func (serv *Server) Listup(ctx context.Context, req *proto.ListupRequest) (*prot
 	for k, v := range serv.easelMap {
 		info := &proto.EaselInfo{}
 		info.Id = k
+		info.Peer = fmt.Sprintf("%s/%s", v.peer.Addr.String(), v.peer.AuthInfo.AuthType())
 		info.UpdatedAt = v.usedAt.String()
 		info.Palettes = make([]*proto.PaletteInfo, 0)
 		(func() {
@@ -402,6 +412,7 @@ func (serv *Server) Listup(ctx context.Context, req *proto.ListupRequest) (*prot
 			for paletteName, palette := range v.paletteMap {
 				info.Palettes = append(info.Palettes, &proto.PaletteInfo{
 					Id:        paletteName,
+					Peer:      fmt.Sprintf("%s/%s", v.peer.Addr.String(), v.peer.AuthInfo.AuthType()),
 					UpdatedAt: palette.usedAt.String(),
 				})
 			}

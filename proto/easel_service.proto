@@ -71,13 +71,15 @@ message PongResponse {
 
 message EaselInfo {
   string id = 1;
-  string updated_at = 2;
-  repeated PaletteInfo palettes = 3;
+  string peer = 2;
+  string updated_at = 3;
+  repeated PaletteInfo palettes = 4;
 }
 
 message PaletteInfo {
   string id = 1;
-  string updated_at = 2;
+  string peer = 2;
+  string updated_at = 3;
 }
 
 message ListupRequest {

@@ -97,13 +97,17 @@ func listup() {
 		return
 	}
 	for _, easel := range resp.Easels {
-		log.Infof("Easel: %s (%s)", easel.Id, easel.UpdatedAt)
+		log.Infof("Easel: %s", easel.Id, easel.UpdatedAt)
+		log.Infof("       Peer:      %s", easel.Peer)
+		log.Infof("       UpdatedAt: %s", easel.UpdatedAt)
 		if len(easel.Palettes) == 0 {
 			log.Infof("  <no palettes>")
 			continue
 		}
 		for _, palette := range easel.Palettes {
-			log.Infof("  - Palette: %s (%s)", palette.Id, palette.UpdatedAt)
+			log.Infof("  - Palette: %s", palette.Id, palette.UpdatedAt)
+			log.Infof("             Peer:      %s", palette.Peer)
+			log.Infof("             UpdatedAt: %s", palette.UpdatedAt)
 		}
 	}
 }
