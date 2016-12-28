@@ -405,6 +405,7 @@ func (serv *Server) Listup(ctx context.Context, req *proto.ListupRequest) (*prot
 				})
 			}
 		})()
+		easels = append(easels, info)
 	}
 	return &proto.ListupResponse{
 		Easels: easels,
