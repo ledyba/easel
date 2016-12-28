@@ -103,7 +103,7 @@ func listup() {
 			continue
 		}
 		for _, palette := range easel.Palettes {
-			log.Infof("  - Palette: %s ()", palette.Id, palette.UpdatedAt)
+			log.Infof("  - Palette: %s (%s)", palette.Id, palette.UpdatedAt)
 		}
 	}
 }

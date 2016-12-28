@@ -130,7 +130,6 @@ func (serv *Server) deleteEasel(name string) bool {
 		serv.easelMaker.RequestDelEasel(e.easel)
 		return true
 	}
-
 	return false
 }
 
@@ -142,6 +141,8 @@ func (serv *Server) makeEasel(name string) *EaselEntry {
 		mutex:      new(sync.Mutex),
 		paletteMap: make(map[string]*PaletteEntry),
 	}
+	serv.easelMutex.Lock()
+	defer serv.easelMutex.Unlock()
 	serv.easelMap[name] = ent
 	return ent
 }
