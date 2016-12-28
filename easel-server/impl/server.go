@@ -394,6 +394,18 @@ func (serv *Server) Ping(ctx context.Context, req *proto.PingRequest) (*proto.Po
 	}, nil
 }
 
+func peerToString(p *peer.Peer) string {
+	addr := "<nil>"
+	if p.Addr != nil {
+		addr = p.Addr.String()
+	}
+	auth := "<nil>"
+	if p.AuthInfo != nil {
+		auth = p.AuthInfo.AuthType()
+	}
+	return fmt.Sprintf("%s/%s", addr, auth)
+}
+
 // Listup ...
 func (serv *Server) Listup(ctx context.Context, req *proto.ListupRequest) (*proto.ListupResponse, error) {
 	serv.easelMutex.Lock()
@@ -401,23 +413,23 @@ func (serv *Server) Listup(ctx context.Context, req *proto.ListupRequest) (*prot
 
 	easels := make([]*proto.EaselInfo, 0)
 	for k, v := range serv.easelMap {
-		info := &proto.EaselInfo{}
-		info.Id = k
-		info.Peer = fmt.Sprintf("%s/%s", v.peer.Addr.String(), v.peer.AuthInfo.AuthType())
-		info.UpdatedAt = v.usedAt.String()
-		info.Palettes = make([]*proto.PaletteInfo, 0)
 		(func() {
 			v.lock()
 			defer v.unlock()
+			info := &proto.EaselInfo{}
+			info.Id = k
+			info.Peer = peerToString(v.peer)
+			info.UpdatedAt = v.usedAt.String()
+			info.Palettes = make([]*proto.PaletteInfo, 0)
 			for paletteName, palette := range v.paletteMap {
 				info.Palettes = append(info.Palettes, &proto.PaletteInfo{
 					Id:        paletteName,
-					Peer:      fmt.Sprintf("%s/%s", v.peer.Addr.String(), v.peer.AuthInfo.AuthType()),
+					Peer:      peerToString(palette.peer),
 					UpdatedAt: palette.usedAt.String(),
 				})
 			}
+			easels = append(easels, info)
 		})()
-		easels = append(easels, info)
 	}
 	return &proto.ListupResponse{
 		Easels: easels,
