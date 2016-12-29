@@ -24,7 +24,7 @@ inst:
 	go get -u "golang.org/x/image/tiff"
 
 proto/easel_service.pb.go: proto/easel_service.proto
-	cd proto && PATH=$(GOPATH)/bin:$(PATH) protoc --go_out=plugins=grpc:. easel_service.proto
+	go generate github.com/ledyba/easel/proto
 
 ####### Executables #######
 
@@ -65,7 +65,7 @@ proto/easel_service.pb.go: proto/easel_service.proto
 ####### Misc #######
 
 clean:
-	rm -rf .bin .bin.linux **/*_gen.go proto/*.go ./.DS_Store **/.DS_Store
+	rm -rf .bin .bin.linux **/*_gen.go proto/*.pb.go ./.DS_Store **/.DS_Store
 
 cl:ma
 	@find . -type f -name \*.go | xargs wc -l
