@@ -1,8 +1,5 @@
 .PHONY: all linux test inst cl clean
 
-GIT_REV=$(shell git log -1 | base64 | tr -d '[:space:]')
-NOW=$(shell date -u "+%Y/%m/%d %H:%M:%S")
-
 all: \
 	.bin/easel-client-daemon \
 	.bin/easel-client-cli \
@@ -33,49 +30,43 @@ proto/easel_service.pb.go: proto/easel_service.proto
 
 .bin/easel-server: proto/easel_service.pb.go $(shell find easel-server image-filters proto util -type f -name '*.go')
 	@mkdir -p .bin
-	go build -o .bin/easel-server \
-					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
-					"github.com/ledyba/easel/easel-server"
+	go generate github.com/ledyba/easel/easel-server
+	go build -o .bin/easel-server "github.com/ledyba/easel/easel-server"
 
 .bin/easel-client-cli: proto/easel_service.pb.go $(shell find easel-client-cli image-filters proto util -type f -name '*.go')
 	@mkdir -p .bin
-	go build -o .bin/easel-client-cli \
-					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
-					"github.com/ledyba/easel/easel-client-cli"
+	go generate github.com/ledyba/easel/easel-client-cli
+	go build -o .bin/easel-client-cli "github.com/ledyba/easel/easel-client-cli"
 
 
 .bin/easel-client-daemon: proto/easel_service.pb.go $(shell find easel-client-daemon image-filters proto util -type f -name '*.go')
 	@mkdir -p .bin
-	go build -o .bin/easel-client-daemon \
-					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
-					"github.com/ledyba/easel/easel-client-daemon"
+	go generate github.com/ledyba/easel/easel-client-daemon
+	go build -o .bin/easel-client-daemon "github.com/ledyba/easel/easel-client-daemon"
 
 ####### Linux Targets #######
 
 .bin.linux/easel-server: proto/easel_service.pb.go $(shell find easel-server image-filters proto util -type f -name '*.go')
 	@mkdir -p .bin.linux
-	GOOS=linux GOARCH=amd64 go build -o .bin.linux/easel-server \
-					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
-					"github.com/ledyba/easel/easel-server"
+	go generate github.com/ledyba/easel/easel-server
+	GOOS=linux GOARCH=amd64 go build -o .bin.linux/easel-server "github.com/ledyba/easel/easel-server"
 
 .bin.linux/easel-client-cli: proto/easel_service.pb.go $(shell find easel-client-cli image-filters proto util -type f -name '*.go')
 	@mkdir -p .bin.linux
-	GOOS=linux GOARCH=amd64 go build -o .bin.linux/easel-client-cli \
-					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
-					"github.com/ledyba/easel/easel-client-cli"
+	go generate github.com/ledyba/easel/easel-client-cli
+	GOOS=linux GOARCH=amd64 go build -o .bin.linux/easel-client-cli "github.com/ledyba/easel/easel-client-cli"
 
 
 .bin.linux/easel-client-daemon: proto/easel_service.pb.go $(shell find easel-client-daemon image-filters proto util -type f -name '*.go')
 	@mkdir -p .bin.linux
-	GOOS=linux GOARCH=amd64 go build -o .bin.linux/easel-client-daemon \
-					-ldflags "-X 'main.gitRev=$(GIT_REV)' -X 'main.buildAt=$(NOW)'" \
-					"github.com/ledyba/easel/easel-client-daemon"
+	go generate github.com/ledyba/easel/easel-client-daemon
+	GOOS=linux GOARCH=amd64 go build -o .bin.linux/easel-client-daemon "github.com/ledyba/easel/easel-client-daemon"
 
 ####### Misc #######
 
 clean:
-	rm -rf .bin .bin.linux
+	rm -rf .bin .bin.linux **/*_gen.go proto/*.go ./.DS_Store **/.DS_Store
 
-cl:
+cl:ma
 	@find . -type f -name \*.go | xargs wc -l
 	@echo $(shell git log --pretty=oneline | wc -l) commits.
