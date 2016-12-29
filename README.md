@@ -59,7 +59,9 @@ go get -u "github.com/go-sql-driver/mysql"
 
 
 ```
-go get -u "github.com/ledyba/easel/easel-server"
+go get -u -d "github.com/ledyba/easel/easel-server"
+go generate "github.com/ledyba/easel/easel-server"
+go install "github.com/ledyba/easel/easel-server"
 ```
 
 or, to cross-compile,
@@ -68,9 +70,8 @@ mkdir -p $GOPATH/src/githuc.com/ledyba/
 cd $GOPATH/src/githuc.com/ledyba/
 git clone "git@github.com:ledyba/easel.git"
 cd easel
-GOOS=linux GOARCH=amd64 go build -o easel-server \
-        -ldflags "-X 'main.gitRev=$(git log -1 | base64 | tr -d \'\[\:space\:\]\')' \-X \'main.buildAt=$(date -u "+%Y/%m/%d %H:%M:%S")\'" \
-        "github.com/ledyba/easel/easel-server"
+go generate "github.com/ledyba/easel/easel-server"
+GOOS=linux GOARCH=amd64 go build -o easel-server "github.com/ledyba/easel/easel-server"
 ```
 
 #### Create Certificates
@@ -109,7 +110,9 @@ Usage of ./easel-server:
 
 #### Build
 ```
-go get -u "github.com/ledyba/easel/easel-client-daemon"
+go get -u -d "github.com/ledyba/easel/easel-client-daemon"
+go generate "github.com/ledyba/easel/easel-client-daemon"
+go install "github.com/ledyba/easel/easel-client-daemon"
 ```
 
 or, to cross-compile,
@@ -118,9 +121,8 @@ mkdir -p $GOPATH/src/githuc.com/ledyba/
 cd $GOPATH/src/githuc.com/ledyba/
 git clone "git@github.com:ledyba/easel.git"
 cd easel
-GOOS=linux GOARCH=amd64 go build -o easel-client-daemon \
-        -ldflags "-X 'main.gitRev=$(git log -1 | base64 | tr -d \'\[\:space\:\]\')' \-X \'main.buildAt=$(date -u "+%Y/%m/%d %H:%M:%S")\'" \
-        "github.com/ledyba/easel/easel-client-daemon"
+go generate "github.com/ledyba/easel/easel-client-daemon"
+GOOS=linux GOARCH=amd64 go build -o easel-client-daemon "github.com/ledyba/easel/easel-client-daemon"
 ```
 
 #### Command line flags
@@ -160,7 +162,9 @@ easel-client-daemon \
 
 #### Build
 ```
-go get -u "github.com/ledyba/easel/easel-client-cli"
+go get -u -d "github.com/ledyba/easel/easel-client-cli"
+go generate "github.com/ledyba/easel/easel-client-cli"
+go install "github.com/ledyba/easel/easel-client-cli"
 ```
 
 or, to cross-compile,
@@ -169,9 +173,8 @@ mkdir -p $GOPATH/src/githuc.com/ledyba/
 cd $GOPATH/src/githuc.com/ledyba/
 git clone "git@github.com:ledyba/easel.git"
 cd easel
-GOOS=linux GOARCH=amd64 go build -o easel-client-cli \
-        -ldflags "-X 'main.gitRev=$(git log -1 | base64 | tr -d \'\[\:space\:\]\')' \-X \'main.buildAt=$(date -u "+%Y/%m/%d %H:%M:%S")\'" \
-        "github.com/ledyba/easel/easel-client-cli"
+go generate "github.com/ledyba/easel/easel-client-cli"
+GOOS=linux GOARCH=amd64 go build -o easel-client-cli "github.com/ledyba/easel/easel-client-cli"
 ```
 
 
