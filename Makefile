@@ -65,7 +65,7 @@ proto/easel_service.pb.go: proto/easel_service.proto
 ####### Misc #######
 
 clean:
-	rm -rf .bin .bin.linux **/*_gen.go proto/*.pb.go ./.DS_Store **/.DS_Store
+	rm -rf .bin .bin.linux **/*.gen.go proto/*.pb.go ./.DS_Store **/.DS_Store
 
 cl:ma
 	@find . -type f -name \*.go | xargs wc -l
