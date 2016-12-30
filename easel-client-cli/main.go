@@ -96,6 +96,7 @@ func listup() {
 		log.Info("Currently, there are no easels.")
 		return
 	}
+	nPalettes := 0
 	for _, easel := range resp.Easels {
 		log.Infof("Easel: %s", easel.Id)
 		log.Infof("       Peer:      %s", easel.Peer)
@@ -109,7 +110,9 @@ func listup() {
 			log.Infof("             Peer:      %s", palette.Peer)
 			log.Infof("             UpdatedAt: %s", palette.UpdatedAt)
 		}
+		nPalettes += len(easel.Palettes)
 	}
+	log.Infof("%d Easels, %d Palettes.", len(resp.Easels), nPalettes)
 }
 
 func doPing() {

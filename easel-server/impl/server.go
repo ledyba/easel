@@ -54,6 +54,10 @@ func (ent *EaselEntry) lock() {
 	ent.mutex.Lock()
 	ent.usedAt = time.Now()
 }
+func (ent *EaselEntry) lockWithoutUpdate() {
+	ent.mutex.Lock()
+	ent.usedAt = time.Now()
+}
 func (ent *EaselEntry) unlock() {
 	ent.mutex.Unlock()
 }
@@ -106,7 +110,7 @@ func (serv *Server) gc() {
 	now := time.Now()
 	cnt := 0
 	for key, e := range serv.easelMap {
-		e.lock()
+		e.lockWithoutUpdate()
 		defer e.unlock()
 		if now.Sub(e.usedAt) >= ExpiredDuration {
 			e.easel.Destroy()
@@ -377,7 +381,7 @@ func (serv *Server) Ping(ctx context.Context, req *proto.PingRequest) (*proto.Po
 	if easelEnt == nil {
 		return nil, ErrEaselNotFound
 	}
-	easelEnt.lock()
+	easelEnt.lockWithoutUpdate()
 	defer easelEnt.unlock()
 	paletteEnt := easelEnt.paletteMap[req.PaletteId]
 	if paletteEnt == nil {
