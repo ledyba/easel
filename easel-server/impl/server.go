@@ -52,11 +52,13 @@ type EaselEntry struct {
 
 func (ent *EaselEntry) lock() {
 	ent.mutex.Lock()
+	ent.update()
+}
+func (ent *EaselEntry) update() {
 	ent.usedAt = time.Now()
 }
 func (ent *EaselEntry) lockWithoutUpdate() {
 	ent.mutex.Lock()
-	ent.usedAt = time.Now()
 }
 func (ent *EaselEntry) unlock() {
 	ent.mutex.Unlock()
@@ -387,6 +389,7 @@ func (serv *Server) Ping(ctx context.Context, req *proto.PingRequest) (*proto.Po
 	if paletteEnt == nil {
 		return nil, ErrPaletteNotFound
 	}
+	easelEnt.update()
 	paletteEnt.lock()
 	defer paletteEnt.unlock()
 	paletteEnt.peer, _ = peer.FromContext(ctx)

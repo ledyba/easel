@@ -38,6 +38,8 @@ var mimeType = flag.String("mime_type", "image/png", "output format. One of: ['i
 var help = flag.Bool("help", false, "Print help and exit")
 var ping = flag.Bool("ping", false, "Test ping and exit")
 var list = flag.Bool("list", false, "Listup canvas/easels and exit")
+
+// benchmark
 var bench = flag.Bool("bench", false, "Benchmark mode. We does not save image.")
 var benchN = flag.Int("benchn", 10, "How many easels will be created.")
 var benchM = flag.Int("benchm", 10, "How many duplicated images will be sent.")
