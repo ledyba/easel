@@ -67,6 +67,6 @@ proto/easel_service.pb.go: proto/easel_service.proto
 clean:
 	rm -rf .bin .bin.linux **/*.gen.go proto/*.pb.go ./.DS_Store **/.DS_Store
 
-cl:ma
+cl:
 	@find . -type f -name \*.go | xargs wc -l
 	@echo $(shell git log --pretty=oneline | wc -l) commits.
