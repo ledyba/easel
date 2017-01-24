@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"net"
 	"runtime"
 	"sync"
 	"time"
 
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 
 	"github.com/ledyba/easel"
@@ -36,9 +38,12 @@ const (
 
 // Server ...
 type Server struct {
-	easelMaker *EaselMaker
+	easelMaker EaselMaker
 	easelMutex *sync.Mutex
 	easelMap   map[string]*EaselEntry
+	gcStopChan chan struct{}
+	grpcServ   *grpc.Server
+	stopWg     sync.WaitGroup
 }
 
 // EaselEntry ...
@@ -84,23 +89,58 @@ func (ent *PaletteEntry) unlock() {
 }
 
 // NewServer ...
-func NewServer(em *EaselMaker) *Server {
+func NewServer(em EaselMaker) *Server {
 	return &Server{
 		easelMaker: em,
 		easelMutex: new(sync.Mutex),
 		easelMap:   make(map[string]*EaselEntry),
+		gcStopChan: make(chan struct{}, 1),
 	}
 }
 
-// StartGC ...
-func (serv *Server) StartGC() {
+// Start ...
+func (serv *Server) Start(listen string, opts ...grpc.ServerOption) {
+	var err error
+
+	lis, err := net.Listen("tcp", listen)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	gsrv := grpc.NewServer(opts...)
+	serv.grpcServ = gsrv
+
+	proto.RegisterEaselServiceServer(gsrv, serv)
+	serv.stopWg.Add(2)
+
+	go func() {
+		defer serv.stopWg.Done()
+		serv.startGC()
+	}()
+	go func() {
+		defer serv.stopWg.Done()
+		gsrv.Serve(lis)
+	}()
+}
+
+// Stop ...
+func (serv *Server) Stop() {
+	serv.gcStopChan <- struct{}{}
+	serv.grpcServ.Stop()
+	serv.stopWg.Wait()
+}
+
+func (serv *Server) startGC() {
 	t := time.NewTicker(ExpiredDuration)
 	log.Info("Start Easel GC timer.")
+	defer t.Stop()
 	for {
 		select {
 		case <-t.C:
 			log.Info("Start Easel GC")
 			serv.gc()
+		case <-serv.gcStopChan:
+			log.Info("Stop Easel GC")
+			return
 		}
 	}
 }

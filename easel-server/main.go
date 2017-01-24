@@ -7,7 +7,6 @@ import (
 	"runtime"
 
 	impl "github.com/ledyba/easel/easel-server/impl"
-	"github.com/ledyba/easel/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -43,7 +42,7 @@ var help = flag.Bool("help", false, "Print help and exit")
 var prof = flag.Bool("prof", false, "Enable profiler")
 var profListen = flag.String("prof_listen", ":3001", "Prof server port")
 
-func startServer(lis net.Listener, em *impl.EaselMaker) {
+func startServer(lis net.Listener, em impl.EaselMaker) {
 	var err error
 	opts := []grpc.ServerOption{
 		grpc.MaxMsgSize(64 * 1024 * 1024),
@@ -62,13 +61,9 @@ func startServer(lis net.Listener, em *impl.EaselMaker) {
 	} else {
 		log.Warn("No keypair provided. Insecure.")
 	}
-	gserver := grpc.NewServer(opts...)
-
-	server := impl.NewServer(em)
-	go server.StartGC()
-	proto.RegisterEaselServiceServer(gserver, server)
+	srv := impl.NewServer(em)
 	log.Infof("Now listen at %s", *listen)
-	gserver.Serve(lis)
+	srv.Start(*listen, opts...)
 }
 
 func main() {
