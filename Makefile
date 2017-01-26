@@ -11,7 +11,10 @@ linux: \
 	.bin.linux/easel-server
 
 test:
-	go test -cover "github.com/ledyba/easel/..."
+	@go test -cover "github.com/ledyba/easel"
+	@go test -cover "github.com/ledyba/easel/image-filters"
+	@go test -cover "github.com/ledyba/easel/easel-server/impl"
+	@go test -cover "github.com/ledyba/easel/util"
 
 inst:
 	go get -u "github.com/go-gl/gl/v4.1-core/gl"
