@@ -2,17 +2,16 @@ package util
 
 import (
 	"runtime"
-	"testing"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 // StartupTest ...
-func StartupTest(t *testing.T) {
+func StartupTest() {
 	runtime.LockOSThread()
 	err := glfw.Init()
 	if err != nil {
-		t.Fatal("Failed to init glfw", t)
+		panic("Failed to init glfw")
 	}
 }
 

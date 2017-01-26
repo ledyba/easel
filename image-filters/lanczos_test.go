@@ -14,17 +14,19 @@ import (
 	"github.com/ledyba/easel/util"
 )
 
+var em impl.EaselMaker
+
+func TestMain(m *testing.M) {
+	util.StartupTest()
+	defer util.ShutdownTest()
+	em = impl.NewEaselMakerMock(10)
+	os.Exit(m.Run())
+}
+
 func TestLanczos(t *testing.T) {
 	// Create server
-	em := impl.NewEaselMaker()
 	var wg sync.WaitGroup
-	wg.Add(2)
-	go (func() {
-		defer wg.Done()
-		util.StartupTest(t)
-		defer util.ShutdownTest()
-		em.Start()
-	})()
+	wg.Add(1)
 
 	srv := impl.NewServer(em)
 	go (func() {
@@ -59,12 +61,12 @@ func TestLanczos(t *testing.T) {
 	paletteID := resp2.PaletteId
 
 	UpdateLanczos(cli, easelID, paletteID, 10)
-	data, img, err := util.LoadImage("github.com/ledyba/easel/test-images/momiji.jpg")
+	data, img, err := util.LoadImage("../test-images/momiji.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 	dx, dy := img.Bounds().Dx(), img.Bounds().Dy()
-	out, err := os.Create("github.com/ledyba/easel/image-filters/lanczos.png")
+	out, err := os.Create("../test-images/momiji.lanczos.png")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -3,6 +3,6 @@ package util
 import "testing"
 
 func TestTestUtil(t *testing.T) {
-	StartupTest(t)
+	StartupTest()
 	defer ShutdownTest()
 }
