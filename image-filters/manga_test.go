@@ -9,7 +9,7 @@ import (
 	"github.com/ledyba/easel/util"
 )
 
-func TestLanczos(t *testing.T) {
+func TestManga(t *testing.T) {
 	testFilter(t, func(t *testing.T, cli proto.EaselServiceClient, easelID, paletteID string) {
 		UpdateLanczos(cli, easelID, paletteID, 10)
 		data, img, err := util.LoadImage("../test-images/momiji.png")

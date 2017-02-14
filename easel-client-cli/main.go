@@ -212,7 +212,7 @@ func processImage(wg *sync.WaitGroup, fnames []string, bench bool) {
 	defer closer()
 	/**** Update Palette ****/
 	switch *filter {
-	case "lanczos":
+	case filters.LanczosFilter:
 		err = filters.UpdateLanczos(serv, easelID, paletteID, *lobes)
 		if err != nil {
 			log.Fatal(err)
