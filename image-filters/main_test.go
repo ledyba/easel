@@ -19,7 +19,7 @@ var em impl.EaselMaker
 func TestMain(m *testing.M) {
 	util.StartupTest()
 	defer util.ShutdownTest()
-	em = impl.NewEaselMakerMock(10)
+	em = impl.NewEaselMakerMock(20)
 	os.Exit(m.Run())
 }
 
